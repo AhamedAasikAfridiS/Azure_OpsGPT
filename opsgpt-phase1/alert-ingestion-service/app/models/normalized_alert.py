@@ -1,4 +1,4 @@
-"""Normalized alert storage."""
+"""Normalized OpsGPT alert persistence."""
 
 from datetime import datetime, timezone
 from typing import Any
@@ -17,13 +17,20 @@ class NormalizedAlert(Base):
     __tablename__ = "normalized_alerts"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    alert_id: Mapped[str] = mapped_column(String(255), index=True, nullable=False)
-    source: Mapped[str] = mapped_column(String(40), index=True, nullable=False)
+    alert_id: Mapped[str] = mapped_column(
+        String(255), index=True, nullable=False
+    )
+    project_id: Mapped[str | None] = mapped_column(
+        String(50), index=True, nullable=True
+    )
+    source: Mapped[str] = mapped_column(
+        String(50), index=True, nullable=False
+    )
     service_name: Mapped[str] = mapped_column(
         String(160), index=True, nullable=False
     )
     alert_type: Mapped[str] = mapped_column(
-        String(40), index=True, nullable=False
+        String(50), index=True, nullable=False
     )
     severity: Mapped[str] = mapped_column(
         String(30), index=True, nullable=False
@@ -34,7 +41,7 @@ class NormalizedAlert(Base):
     metric_value: Mapped[Any | None] = mapped_column(JSON)
     threshold: Mapped[str | None] = mapped_column(String(255))
     environment: Mapped[str] = mapped_column(
-        String(30), index=True, nullable=False
+        String(50), index=True, nullable=False
     )
     resource_id: Mapped[str | None] = mapped_column(Text)
     dashboard_url: Mapped[str | None] = mapped_column(Text)

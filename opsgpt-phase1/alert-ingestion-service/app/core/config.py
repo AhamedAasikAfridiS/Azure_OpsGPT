@@ -16,6 +16,8 @@ class Settings(BaseSettings):
         "opsgpt_alerts_db"
     )
     ai_analysis_service_url: str = "http://ai-analysis-service:8003"
+    core_api_url: str = "http://core-api-service:8001"
+    internal_api_key: str = "change-me-internal-key"
     enable_analysis_forwarding: bool = False
     analysis_forward_timeout_seconds: int = 15
     cors_origins: str = "http://localhost:3000"

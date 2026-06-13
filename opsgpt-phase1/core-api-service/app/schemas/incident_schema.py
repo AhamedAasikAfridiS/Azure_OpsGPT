@@ -51,6 +51,7 @@ class ResolutionNoteResponse(BaseModel):
 class IncidentResponse(BaseModel):
     id: int
     incident_id: str
+    project_id: str | None
     title: str
     service_name: str
     severity: IncidentSeverity

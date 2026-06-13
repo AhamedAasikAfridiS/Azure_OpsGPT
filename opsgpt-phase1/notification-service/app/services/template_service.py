@@ -8,6 +8,7 @@ EVENT_TEMPLATES = {
 \U0001F6A8 New Incident Created
 
 Incident ID: {incident_id}
+Project: {project_name}
 Service: {service_name}
 Severity: {severity}
 Status: {status}
@@ -19,6 +20,7 @@ Title:
 \U0001F6A8 Critical Incident Detected
 
 Incident ID: {incident_id}
+Project: {project_name}
 Service: {service_name}
 Severity: {severity}
 Status: {status}
@@ -39,6 +41,7 @@ Recommended Fix:
 \U0001F9E0 AI Analysis Completed
 
 Incident ID: {incident_id}
+Project: {project_name}
 Service: {service_name}
 Severity: {severity}
 
@@ -58,6 +61,7 @@ Recommended Immediate Actions:
 \U0001F504 Incident Status Updated
 
 Incident ID: {incident_id}
+Project: {project_name}
 Service: {service_name}
 Status: {status}
 """,
@@ -65,6 +69,7 @@ Status: {status}
 \u2705 Incident Resolved
 
 Incident ID: {incident_id}
+Project: {project_name}
 Service: {service_name}
 Resolved By: {resolved_by}
 
@@ -75,6 +80,7 @@ Resolution Notes:
 \U0001F4DD Resolution Notes Added
 
 Incident ID: {incident_id}
+Project: {project_name}
 Service: {service_name}
 
 Notes:

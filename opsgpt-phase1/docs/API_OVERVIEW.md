@@ -10,6 +10,12 @@
 | `/incidents/:incidentId` | Incident analysis, timeline, similar incidents, and editor actions |
 | `/knowledge-base` | Historical incident knowledge |
 | `/profile` | Current user profile and role |
+| `/projects` | Select an assigned project |
+| `/projects/:projectId/dashboard` | Project incident summary |
+| `/projects/:projectId/incidents` | Project incident list |
+| `/projects/:projectId/incidents/:incidentId` | Project incident detail |
+| `/admin/projects` | Admin project and membership management |
+| `/admin/projects/:projectId/sources` | Admin monitoring source management |
 
 ## Core API Service
 
@@ -63,12 +69,47 @@ POST /knowledge-base
 GET  /audit-logs
 ```
 
+### Projects and Memberships
+
+```text
+GET    /projects
+POST   /projects
+GET    /projects/{project_id}
+PATCH  /projects/{project_id}
+DELETE /projects/{project_id}
+
+GET    /projects/{project_id}/members
+POST   /projects/{project_id}/members
+DELETE /projects/{project_id}/members/{user_id}
+
+GET /projects/{project_id}/dashboard/summary
+GET /projects/{project_id}/incidents
+GET /projects/{project_id}/incidents/{incident_id}
+```
+
+Project modification and membership endpoints require `admin`. Junior and
+senior engineers can read only projects assigned to them.
+
+### Monitoring Sources
+
+```text
+GET    /projects/{project_id}/monitoring-sources
+POST   /projects/{project_id}/monitoring-sources
+GET    /projects/{project_id}/monitoring-sources/{source_id}
+PATCH  /projects/{project_id}/monitoring-sources/{source_id}
+DELETE /projects/{project_id}/monitoring-sources/{source_id}
+```
+
+These admin-only endpoints store Grafana, Azure Monitor, or custom source
+metadata and return the generated project webhook path and token.
+
 ### Internal Service Endpoints
 
 ```text
 POST  /internal/incidents
 PATCH /internal/incidents/{incident_id}/analysis
 POST  /internal/incidents/{incident_id}/timeline
+GET   /internal/projects/{project_id}/monitoring-sources/validate
 ```
 
 Internal endpoints require:
@@ -90,6 +131,7 @@ Base URL: `http://localhost:8002`
 ```text
 POST /alerts/webhook/azure-monitor
 POST /alerts/webhook/grafana
+POST /alerts/webhook/project/{project_id}/{webhook_token}
 POST /alerts/manual
 GET  /alerts
 GET  /alerts/{alert_id}

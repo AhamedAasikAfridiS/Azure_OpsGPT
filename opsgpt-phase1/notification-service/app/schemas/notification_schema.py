@@ -37,6 +37,8 @@ class RecommendedFixPayload(BaseModel):
 class NotificationEventRequest(BaseModel):
     event_type: NotificationEventType
     incident_id: str = Field(min_length=1, max_length=50)
+    project_id: str | None = Field(default=None, max_length=50)
+    project_name: str | None = Field(default=None, max_length=160)
     service_name: str = Field(min_length=1, max_length=160)
     severity: str | None = None
     status: str | None = None

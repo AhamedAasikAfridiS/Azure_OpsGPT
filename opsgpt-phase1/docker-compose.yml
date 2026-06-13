@@ -146,6 +146,8 @@ services:
       APP_PORT: 8002
       DATABASE_URL: postgresql://opsgpt_alerts:opsgpt_alerts_password@alert-db:5432/opsgpt_alerts_db
       AI_ANALYSIS_SERVICE_URL: http://ai-analysis-service:8003
+      CORE_API_URL: http://core-api-service:8001
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:-change-me-internal-key}
       ENABLE_ANALYSIS_FORWARDING: ${ENABLE_ANALYSIS_FORWARDING:-false}
       CORS_ORIGINS: http://localhost:3000
     ports:
@@ -154,6 +156,8 @@ services:
       alert-db:
         condition: service_healthy
       ai-analysis-service:
+        condition: service_started
+      core-api-service:
         condition: service_started
     networks:
       - opsgpt-network
@@ -186,6 +190,7 @@ services:
       context: ./frontend-service
     environment:
       VITE_CORE_API_URL: http://localhost:8001
+      VITE_ALERT_INGESTION_URL: http://localhost:8002
     ports:
       - "3000:3000"
     depends_on:

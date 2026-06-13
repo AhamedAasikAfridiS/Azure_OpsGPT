@@ -15,6 +15,8 @@ Phase 1 includes:
 - Five application services
 - Four PostgreSQL databases
 - Local JWT authentication and role-based access control
+- Admin-managed projects, memberships, and monitoring source metadata
+- Project-specific webhook URLs and incident isolation
 - Azure Monitor-style, Grafana-style, and manual alert ingestion
 - Rule-based duplicate detection and alert correlation
 - Real AI provider integration through Ollama, Gemini, or OpenAI
@@ -32,9 +34,9 @@ ID, message queues, vector search, WebSockets, or production hardening.
 | Service | Responsibility | Boundary |
 | --- | --- | --- |
 | `frontend-service` | Login, dashboards, incidents, knowledge base, profile, and role-aware controls | Calls Core API for normal user workflows |
-| `core-api-service` | Authentication, RBAC, incidents, timelines, resolution notes, audit logs, and knowledge base | Does not ingest alerts, generate AI output, or send Slack directly |
-| `alert-ingestion-service` | Receives, stores, parses, validates, normalizes, and forwards alerts | Does not create incidents or generate analysis |
-| `ai-analysis-service` | Duplicate detection, correlation, real AI analysis, and Core API integration | Does not parse raw monitoring payloads or write to the Core database |
+| `core-api-service` | Authentication, RBAC, projects, monitoring metadata, incidents, timelines, audits, and knowledge base | Does not ingest alerts, generate AI output, or send Slack directly |
+| `alert-ingestion-service` | Receives, validates project webhooks, stores, normalizes, and forwards alerts | Does not create incidents or generate analysis |
+| `ai-analysis-service` | Project-aware duplicate detection, correlation, real AI analysis, and Core API integration | Does not parse raw monitoring payloads or write to the Core database |
 | `notification-service` | Formats and delivers console or Slack notifications and records attempts | Does not analyze or manage incidents |
 
 More detail is available in [docs/MICROSERVICES.md](docs/MICROSERVICES.md).
@@ -98,6 +100,8 @@ INTERNAL_API_KEY=change-me-internal-key
 ```
 
 The Core API and AI Analysis Service must use the same `INTERNAL_API_KEY`.
+Alert Ingestion uses that same key when validating project webhook tokens
+through Core API.
 
 The frontend uses `http://localhost:8001` because its requests originate in the
 user's browser. Backend containers use Docker DNS names such as
@@ -135,19 +139,25 @@ These commands are documentation only and have not been executed by Codex.
 
 ## Expected Local Workflow
 
-1. Azure Monitor, Grafana, or a person sends an alert to Alert Ingestion.
-2. Alert Ingestion stores the original JSON and creates a normalized alert.
-3. When forwarding is enabled, Alert Ingestion sends the normalized alert to
+1. An admin creates a project, assigns engineers, and adds a monitoring source.
+2. OpsGPT returns a project-specific webhook URL and token.
+3. Azure Monitor, Grafana, or a custom source sends a triggered alert to that
+   webhook.
+4. Alert Ingestion validates the token with Core, stores the original JSON,
+   and creates a project-scoped normalized alert.
+5. When forwarding is enabled, Alert Ingestion sends the normalized alert to
    AI Analysis.
-4. AI Analysis detects duplicates and correlates related alerts.
-5. AI Analysis asks the configured real provider for summary, RCA, confidence,
+6. AI Analysis detects duplicates and correlates related alerts within the
+   project.
+7. AI Analysis asks the configured real provider for summary, RCA, confidence,
    evidence, and recommended fixes.
-6. AI Analysis creates or updates the incident through Core API internal REST
+8. AI Analysis creates or updates the project incident through Core API REST
    endpoints.
-7. Core API stores the incident and exposes it to the frontend.
-8. When notifications are enabled, Core API sends a complete event to
+9. Assigned engineers select the project and view its incidents in the
+   frontend.
+10. When notifications are enabled, Core API sends a complete event to
    Notification Service.
-9. Notification Service writes to the console or posts to Slack.
+11. Notification Service writes to the console or posts to Slack.
 
 OpsGPT receives alerts that monitoring systems trigger. It does not scrape or
 poll Grafana and Azure Monitor dashboards. See

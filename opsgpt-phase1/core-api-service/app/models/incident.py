@@ -20,6 +20,9 @@ class Incident(Base):
     incident_id: Mapped[str] = mapped_column(
         String(50), unique=True, index=True, nullable=False
     )
+    project_id: Mapped[str | None] = mapped_column(
+        ForeignKey("projects.project_id"), index=True, nullable=True
+    )
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     service_name: Mapped[str] = mapped_column(
         String(120), index=True, nullable=False

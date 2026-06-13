@@ -30,6 +30,11 @@ from app.services.alert_storage_service import (
 )
 from app.services.alert_validation_service import validate_normalized_alert
 from app.services.ingestion_log_service import create_ingestion_log
+from app.services.project_validation_client import (
+    ProjectWebhookValidationError,
+    validate_project_webhook,
+)
+from app.utils.id_generator import generate_alert_id
 
 router = APIRouter(prefix="/alerts", tags=["Alerts"])
 
@@ -43,6 +48,7 @@ def _ingest_alert(
     *,
     source: str,
     payload: dict[str, Any],
+    project_id: str | None = None,
 ) -> NormalizedAlert:
     candidate_alert_id = get_candidate_alert_id(source, payload)
     store_raw_alert(
@@ -50,6 +56,7 @@ def _ingest_alert(
         alert_id=candidate_alert_id,
         source=source,
         raw_payload=payload,
+        project_id=project_id,
     )
     create_ingestion_log(
         db,
@@ -64,6 +71,7 @@ def _ingest_alert(
             payload,
             candidate_alert_id,
         )
+        normalized_data["project_id"] = project_id
         normalized = validate_normalized_alert(normalized_data)
     except ValidationError as exc:
         errors = _format_validation_errors(exc)
@@ -170,6 +178,47 @@ def receive_manual_alert(
     db: Annotated[Session, Depends(get_db)],
 ) -> NormalizedAlert:
     return _ingest_alert(db, source="manual", payload=payload)
+
+
+@router.post(
+    "/webhook/project/{project_id}/{webhook_token}",
+    response_model=NormalizedAlertResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def receive_project_alert(
+    project_id: str,
+    webhook_token: str,
+    payload: Annotated[dict[str, Any], Body()],
+    db: Annotated[Session, Depends(get_db)],
+) -> NormalizedAlert:
+    try:
+        source = validate_project_webhook(project_id, webhook_token)
+    except ProjectWebhookValidationError as exc:
+        alert_id = generate_alert_id()
+        store_raw_alert(
+            db,
+            alert_id=alert_id,
+            project_id=project_id,
+            source="custom",
+            raw_payload=payload,
+        )
+        create_ingestion_log(
+            db,
+            alert_id=alert_id,
+            event_type="alert_rejected",
+            message=str(exc),
+        )
+        raise HTTPException(
+            status_code=exc.status_code,
+            detail=str(exc),
+        ) from exc
+
+    return _ingest_alert(
+        db,
+        source=source.source_type,
+        payload=payload,
+        project_id=source.project_id,
+    )
 
 
 @router.get("", response_model=list[NormalizedAlertResponse])

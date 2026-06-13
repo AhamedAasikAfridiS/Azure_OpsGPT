@@ -7,6 +7,7 @@ from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
 from app.models.incident import Incident
+from app.models.project import Project
 from app.models.resolution_note import ResolutionNote
 from app.models.timeline import IncidentTimeline
 from app.models.user import User
@@ -36,6 +37,8 @@ def get_incident_or_404(db: Session, incident_id: str) -> Incident:
 def list_incidents(
     db: Session,
     *,
+    project_id: str | None = None,
+    accessible_project_ids: list[str] | None = None,
     incident_status: str | None = None,
     severity: str | None = None,
     service_name: str | None = None,
@@ -44,6 +47,14 @@ def list_incidents(
     offset: int = 0,
 ) -> list[Incident]:
     statement = select(Incident)
+    if project_id:
+        statement = statement.where(Incident.project_id == project_id)
+    elif accessible_project_ids is not None:
+        if not accessible_project_ids:
+            return []
+        statement = statement.where(
+            Incident.project_id.in_(accessible_project_ids)
+        )
     if incident_status:
         statement = statement.where(Incident.status == incident_status)
     if severity:
@@ -96,6 +107,18 @@ def create_internal_incident(
     payload: InternalIncidentCreate,
 ) -> Incident:
     incident_id = payload.incident_id or generate_incident_id()
+    if payload.project_id:
+        project = db.scalar(
+            select(Project).where(
+                Project.project_id == payload.project_id,
+                Project.is_active.is_(True),
+            )
+        )
+        if project is None:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Project does not exist or is inactive",
+            )
     existing = db.scalar(
         select(Incident).where(Incident.incident_id == incident_id)
     )

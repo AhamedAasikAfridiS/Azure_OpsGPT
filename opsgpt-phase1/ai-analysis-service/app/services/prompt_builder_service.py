@@ -21,6 +21,7 @@ def _serialize_alerts(alerts: list[Any]) -> str:
             serialized.append(
                 {
                     "alert_id": alert.alert_id,
+                    "project_id": alert.project_id,
                     "source": alert.source,
                     "service_name": alert.service_name,
                     "alert_type": alert.alert_type,

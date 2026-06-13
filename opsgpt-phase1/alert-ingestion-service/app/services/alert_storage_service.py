@@ -17,9 +17,11 @@ def store_raw_alert(
     alert_id: str,
     source: str,
     raw_payload: dict[str, Any],
+    project_id: str | None = None,
 ) -> RawAlert:
     raw_alert = RawAlert(
         alert_id=alert_id,
+        project_id=project_id,
         source=source,
         raw_payload=raw_payload,
     )

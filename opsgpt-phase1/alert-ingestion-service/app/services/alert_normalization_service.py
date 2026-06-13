@@ -52,4 +52,8 @@ def normalize_alert(
         return parse_grafana_alert(payload, alert_id)
     if source == "manual":
         return parse_manual_alert(payload, alert_id)
+    if source == "custom":
+        normalized = parse_manual_alert(payload, alert_id)
+        normalized["source"] = "custom"
+        return normalized
     raise ValueError(f"Unsupported alert source: {source}")

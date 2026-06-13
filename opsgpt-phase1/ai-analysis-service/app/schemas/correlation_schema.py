@@ -23,6 +23,7 @@ class CorrelateRequest(BaseModel):
 class CorrelationGroupResponse(BaseModel):
     id: int
     correlation_id: str
+    project_id: str | None
     service_name: str
     environment: str
     severity: AlertSeverity

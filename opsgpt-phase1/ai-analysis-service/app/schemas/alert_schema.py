@@ -44,6 +44,7 @@ class AlertStatus(StrEnum):
 
 class NormalizedAlertInput(BaseModel):
     alert_id: str = Field(min_length=1, max_length=255)
+    project_id: str | None = Field(default=None, max_length=50)
     source: AlertSource
     service_name: str = Field(min_length=1, max_length=160)
     alert_type: AlertType
@@ -66,6 +67,7 @@ class NormalizedAlertInput(BaseModel):
 class StoredAnalysisAlertResponse(BaseModel):
     id: int
     alert_id: str
+    project_id: str | None
     source: AlertSource
     service_name: str
     alert_type: AlertType

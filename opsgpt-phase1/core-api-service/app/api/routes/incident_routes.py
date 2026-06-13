@@ -32,6 +32,11 @@ from app.services.incident_service import (
 )
 from app.services.knowledge_base_service import find_similar_incidents
 from app.services.notification_client import send_notification_event
+from app.services.project_service import (
+    accessible_project_ids,
+    ensure_incident_access,
+    project_display_name,
+)
 
 router = APIRouter(prefix="/incidents", tags=["Incidents"])
 EditorUser = Annotated[
@@ -42,7 +47,7 @@ EditorUser = Annotated[
 
 @router.get("", response_model=list[IncidentResponse])
 def get_incidents(
-    _: CurrentUser,
+    current_user: CurrentUser,
     db: Annotated[Session, Depends(get_db)],
     incident_status: IncidentStatus | None = Query(default=None, alias="status"),
     severity: IncidentSeverity | None = None,
@@ -53,6 +58,7 @@ def get_incidents(
 ) -> list[Incident]:
     return list_incidents(
         db,
+        accessible_project_ids=accessible_project_ids(db, current_user),
         incident_status=incident_status.value if incident_status else None,
         severity=severity.value if severity else None,
         service_name=service_name,
@@ -65,10 +71,11 @@ def get_incidents(
 @router.get("/{incident_id}", response_model=IncidentDetailResponse)
 def get_incident(
     incident_id: str,
-    _: CurrentUser,
+    current_user: CurrentUser,
     db: Annotated[Session, Depends(get_db)],
 ) -> IncidentDetailResponse:
     incident = get_incident_or_404(db, incident_id)
+    ensure_incident_access(db, incident, current_user)
     incident_data = IncidentResponse.model_validate(incident).model_dump()
     return IncidentDetailResponse(
         **incident_data,
@@ -84,6 +91,8 @@ def change_incident_status(
     current_user: EditorUser,
     db: Annotated[Session, Depends(get_db)],
 ) -> Incident:
+    incident = get_incident_or_404(db, incident_id)
+    ensure_incident_access(db, incident, current_user)
     incident = update_status(db, incident_id, payload, current_user)
     event_type = (
         "incident_resolved"
@@ -94,6 +103,8 @@ def change_incident_status(
         {
             "event_type": event_type,
             "incident_id": incident.incident_id,
+            "project_id": incident.project_id,
+            "project_name": project_display_name(db, incident.project_id),
             "service_name": incident.service_name,
             "severity": incident.severity,
             "status": incident.status,
@@ -122,17 +133,20 @@ def create_resolution_note(
     current_user: EditorUser,
     db: Annotated[Session, Depends(get_db)],
 ) -> ResolutionNote:
+    incident = get_incident_or_404(db, incident_id)
+    ensure_incident_access(db, incident, current_user)
     note = add_resolution_note(
         db,
         incident_id,
         payload.notes,
         current_user,
     )
-    incident = get_incident_or_404(db, incident_id)
     send_notification_event(
         {
             "event_type": "resolution_notes_added",
             "incident_id": incident.incident_id,
+            "project_id": incident.project_id,
+            "project_name": project_display_name(db, incident.project_id),
             "service_name": incident.service_name,
             "severity": incident.severity,
             "status": incident.status,
@@ -146,9 +160,11 @@ def create_resolution_note(
 @router.get("/{incident_id}/timeline", response_model=list[TimelineResponse])
 def incident_timeline(
     incident_id: str,
-    _: CurrentUser,
+    current_user: CurrentUser,
     db: Annotated[Session, Depends(get_db)],
 ):
+    incident = get_incident_or_404(db, incident_id)
+    ensure_incident_access(db, incident, current_user)
     return get_timeline(db, incident_id)
 
 
@@ -158,8 +174,9 @@ def incident_timeline(
 )
 def similar_incidents(
     incident_id: str,
-    _: CurrentUser,
+    current_user: CurrentUser,
     db: Annotated[Session, Depends(get_db)],
 ) -> list[SimilarIncidentResponse]:
     incident = get_incident_or_404(db, incident_id)
+    ensure_incident_access(db, incident, current_user)
     return find_similar_incidents(db, incident)

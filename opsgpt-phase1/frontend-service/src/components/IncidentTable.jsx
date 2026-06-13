@@ -4,7 +4,11 @@ import { formatDateTime } from "../utils/formatters";
 import SeverityBadge from "./SeverityBadge";
 import StatusBadge from "./StatusBadge";
 
-function IncidentTable({ incidents, emptyMessage = "No incidents found." }) {
+function IncidentTable({
+  incidents,
+  emptyMessage = "No incidents found.",
+  projectId,
+}) {
   if (!incidents.length) {
     return <div className="empty-state">{emptyMessage}</div>;
   }
@@ -26,7 +30,13 @@ function IncidentTable({ incidents, emptyMessage = "No incidents found." }) {
           {incidents.map((incident) => (
             <tr key={incident.incident_id}>
               <td>
-                <Link to={`/incidents/${incident.incident_id}`}>
+                <Link
+                  to={
+                    projectId
+                      ? `/projects/${projectId}/incidents/${incident.incident_id}`
+                      : `/incidents/${incident.incident_id}`
+                  }
+                >
                   {incident.incident_id}
                 </Link>
               </td>

@@ -12,6 +12,8 @@ from app.api.routes import (
     incident_routes,
     internal_routes,
     knowledge_base_routes,
+    monitoring_source_routes,
+    project_routes,
     user_routes,
 )
 from app.core.config import get_settings
@@ -51,6 +53,8 @@ app.include_router(incident_routes.router)
 app.include_router(knowledge_base_routes.router)
 app.include_router(audit_routes.router)
 app.include_router(internal_routes.router)
+app.include_router(project_routes.router)
+app.include_router(monitoring_source_routes.router)
 
 
 @app.get("/health", tags=["Health"])

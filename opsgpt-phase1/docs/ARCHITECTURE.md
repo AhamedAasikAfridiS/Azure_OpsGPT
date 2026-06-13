@@ -17,6 +17,9 @@ ownership.
 Azure Monitor / Grafana / Manual Submission
                     |
                     v
+       Project Webhook + Token Validation
+                    |
+                    v
           Alert Ingestion Service
                     |
                     v
@@ -59,6 +62,12 @@ Alert Ingestion accepts Azure Monitor Common Alert Schema payloads, Grafana
 webhooks, and manual alert requests. It stores the original JSON before
 normalization so rejected payloads remain auditable.
 
+For project monitoring, an admin creates a project and monitoring source in
+Core API. Core returns a source-specific webhook path and token. Grafana,
+Azure Monitor, or a custom sender is configured to POST triggered alerts to
+that project webhook. Alert Ingestion validates the token through Core before
+processing the payload.
+
 ### 2. Normalization
 
 Source-specific parsers convert alerts into one common schema containing the
@@ -70,6 +79,7 @@ and timestamps.
 AI Analysis stores normalized alerts, detects duplicates, and groups related
 alerts by:
 
+- Project
 - Service name
 - Environment
 - Correlation time window
@@ -87,6 +97,8 @@ endpoints using the shared `X-Internal-API-Key`.
 Core API owns:
 
 - Users and roles
+- Projects and memberships
+- Monitoring source metadata and webhook tokens
 - Incidents
 - Status and resolution data
 - Timelines
@@ -99,6 +111,10 @@ The React frontend authenticates with Core API and displays dashboards,
 incidents, AI analysis, timelines, knowledge entries, and profile information.
 Senior engineers and admins receive incident editing controls. Junior
 engineers receive a read-only interface.
+
+After login, users select a project. Admins can see every project. Junior and
+senior engineers can see only projects assigned through Core memberships.
+Project routes prevent incidents from being read across project boundaries.
 
 ### 6. Notification
 

@@ -17,6 +17,8 @@ OpsGPT Phase 1 is intended for local development and demonstration.
 - A real Azure Monitor integration is not required.
 - A real Grafana integration is not required.
 - Alerts can be tested with the JSON files in `sample-payloads/`.
+- Admins create projects, assign members, and register monitoring sources.
+- Project sources receive generated webhook URLs and tokens.
 - Azure OpenAI is planned as a Phase 2 integration path.
 - Phase 1 AI analysis can use Ollama, Gemini, or OpenAI.
 - Services communicate through local REST APIs.
@@ -52,8 +54,8 @@ processes triggered alert payloads through the Alert Ingestion Service.
 | Service | Port | Responsibility | Depends on |
 | --- | ---: | --- | --- |
 | `frontend-service` | `3000` | React UI | `core-api-service` |
-| `core-api-service` | `8001` | Authentication, RBAC, incidents, dashboard, and knowledge base | `core-db`; `notification-service` is optional |
-| `alert-ingestion-service` | `8002` | Alert receiving, parsing, validation, and normalization | `alert-db`; `ai-analysis-service` is optional |
+| `core-api-service` | `8001` | Authentication, RBAC, projects, monitoring metadata, incidents, dashboard, and knowledge base | `core-db`; `notification-service` is optional |
+| `alert-ingestion-service` | `8002` | Alert receiving, project token validation, parsing, and normalization | `alert-db`, `core-api-service`; `ai-analysis-service` is optional |
 | `ai-analysis-service` | `8003` | Correlation, AI summary, RCA, and fix recommendations | `analysis-db`, `core-api-service` |
 | `notification-service` | `8004` | Console or Slack notifications | `notification-db` |
 
@@ -116,6 +118,8 @@ in the terminal or in a root `opsgpt-phase1/.env` file.
 
 - `DATABASE_URL`: Alert PostgreSQL connection string
 - `AI_ANALYSIS_SERVICE_URL`: AI Analysis Service base URL
+- `CORE_API_URL`: Core API used to validate project webhook tokens
+- `INTERNAL_API_KEY`: Must match the Core API value
 - `ENABLE_ANALYSIS_FORWARDING`: Enables automatic normalized-alert forwarding
 
 ### AI Analysis Variables
@@ -140,11 +144,14 @@ in the terminal or in a root `opsgpt-phase1/.env` file.
 ### Frontend Variables
 
 - `VITE_CORE_API_URL`: Browser-accessible Core API URL
+- `VITE_ALERT_INGESTION_URL`: Public base URL displayed with generated webhook
+  paths
 
 For Docker Compose, the frontend value should remain:
 
 ```env
 VITE_CORE_API_URL=http://localhost:8001
+VITE_ALERT_INGESTION_URL=http://localhost:8002
 ```
 
 The browser cannot use Docker-only service names such as
@@ -455,13 +462,31 @@ curl.exe -X POST `
 When `ENABLE_ANALYSIS_FORWARDING=false`, Steps E through G store and normalize
 alerts but do not trigger AI analysis automatically.
 
+### Project-Based Webhook Workflow
+
+1. Login as `admin`.
+2. Open `Admin Projects` and create a project.
+3. Assign junior or senior engineers from the membership section.
+4. Open the project's `Monitoring sources` page.
+5. Add a Grafana, Azure Monitor, or custom source.
+6. Copy the generated webhook URL.
+7. Configure the monitoring tool's webhook/contact point to POST triggered
+   alert payloads to that URL.
+8. Login as an assigned engineer and select the project.
+9. View project-scoped dashboard and incident pages.
+
+Dashboard and alert rule URLs are metadata links only. OpsGPT does not scrape
+them.
+
 ## 14. Expected End-To-End Flow
 
 1. An alert is submitted to Alert Ingestion.
-2. Alert Ingestion stores the original raw payload.
-3. Alert Ingestion parses, validates, normalizes, and stores the alert.
-4. If forwarding is enabled, it sends the normalized alert to AI Analysis.
-5. AI Analysis checks for duplicates and correlates related alerts.
+2. For project webhooks, Alert Ingestion validates the project token with
+   Core API.
+3. Alert Ingestion stores the original raw payload.
+4. Alert Ingestion parses, validates, normalizes, and stores the project ID.
+5. If forwarding is enabled, it sends the normalized alert to AI Analysis.
+6. AI Analysis checks for duplicates and correlates only within the project.
 6. AI Analysis calls the configured real AI provider.
 7. AI Analysis creates an incident through the Core internal API when needed.
 8. AI Analysis updates Core with the generated summary, RCA, evidence,
@@ -553,6 +578,9 @@ alerts but do not trigger AI analysis automatically.
 - Local synchronous REST communication is used between services.
 - Database tables are created through SQLAlchemy metadata rather than a full
   migration workflow.
+- Existing local database volumes must be recreated once after adding the
+  project tables and nullable project columns because Phase 1 has no migration
+  runner.
 
 ## 18. Future Phase 2 Ideas
 
@@ -572,6 +600,7 @@ alerts but do not trigger AI analysis automatically.
 
 - [ ] `.env` files created from `.env.example`
 - [ ] `INTERNAL_API_KEY` matches between Core API and AI Analysis
+- [ ] `INTERNAL_API_KEY` also matches Alert Ingestion
 - [ ] `AI_PROVIDER` configured
 - [ ] Ollama, Gemini, or OpenAI configured
 - [ ] Docker Desktop running
@@ -579,6 +608,7 @@ alerts but do not trigger AI analysis automatically.
 - [ ] `docker compose up` completed
 - [ ] Frontend accessible on port `3000`
 - [ ] Core API documentation accessible on port `8001`
+- [ ] Admin project created and engineers assigned
+- [ ] Monitoring source webhook generated
 - [ ] Manual alert submitted successfully
-- [ ] Incident visible in the dashboard
-
+- [ ] Project incident visible in the dashboard

@@ -9,6 +9,7 @@ Responsibilities:
 - User login and logout
 - Protected routes
 - Dashboard
+- Project selector and project-scoped navigation
 - Incident list and filters
 - Incident detail and AI analysis display
 - Status updates and resolution-note forms
@@ -16,6 +17,7 @@ Responsibilities:
 - Knowledge base
 - User profile
 - Role-aware controls
+- Admin project, membership, and monitoring source screens
 
 Boundaries:
 
@@ -32,6 +34,8 @@ Responsibilities:
 
 - Authentication and local users
 - Role-based access control
+- Project and membership ownership
+- Monitoring source metadata and webhook token generation
 - Incident data and status
 - Resolution notes
 - Dashboard aggregates
@@ -55,6 +59,7 @@ Responsibilities:
 
 - Azure Monitor-style webhook reception
 - Grafana-style webhook reception
+- Project-specific webhook reception and Core token validation
 - Manual alert submission
 - Raw payload storage
 - Source-specific parsing
@@ -77,7 +82,7 @@ Responsibilities:
 
 - Store normalized alerts
 - Duplicate detection
-- Rule-based correlation
+- Project-aware rule-based correlation
 - Correlation-group management
 - Real AI provider calls
 - Structured JSON validation

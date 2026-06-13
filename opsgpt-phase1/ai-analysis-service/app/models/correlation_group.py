@@ -1,4 +1,4 @@
-"""Correlated alert group."""
+"""Alert correlation group persistence."""
 
 from datetime import datetime, timezone
 from typing import Any
@@ -20,23 +20,24 @@ class CorrelationGroup(Base):
     correlation_id: Mapped[str] = mapped_column(
         String(50), unique=True, index=True, nullable=False
     )
+    project_id: Mapped[str | None] = mapped_column(
+        String(50), index=True, nullable=True
+    )
     service_name: Mapped[str] = mapped_column(
         String(160), index=True, nullable=False
     )
     environment: Mapped[str] = mapped_column(
-        String(30), index=True, nullable=False
+        String(50), index=True, nullable=False
     )
-    severity: Mapped[str] = mapped_column(
-        String(30), index=True, nullable=False
-    )
+    severity: Mapped[str] = mapped_column(String(30), nullable=False)
     status: Mapped[str] = mapped_column(
-        String(30), default="open", index=True, nullable=False
+        String(40), default="open", index=True, nullable=False
     )
     related_alert_ids: Mapped[list[Any]] = mapped_column(
         JSON, default=list, nullable=False
     )
     incident_id: Mapped[str | None] = mapped_column(
-        String(50), unique=True, index=True
+        String(50), index=True, nullable=True
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utc_now, nullable=False
@@ -45,5 +46,6 @@ class CorrelationGroup(Base):
         DateTime(timezone=True),
         default=utc_now,
         onupdate=utc_now,
+        index=True,
         nullable=False,
     )

@@ -44,3 +44,10 @@ export async function getSimilarIncidents(incidentId) {
   const response = await apiClient.get(`/incidents/${incidentId}/similar`);
   return response.data;
 }
+
+export async function getProjectIncident(projectId, incidentId) {
+  const response = await apiClient.get(
+    `/projects/${projectId}/incidents/${incidentId}`,
+  );
+  return response.data;
+}

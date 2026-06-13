@@ -9,6 +9,7 @@ from app.schemas.incident_schema import IncidentSeverity, IncidentStatus
 
 class InternalIncidentCreate(BaseModel):
     incident_id: str | None = Field(default=None, max_length=50)
+    project_id: str | None = Field(default=None, max_length=50)
     title: str = Field(min_length=2, max_length=255)
     service_name: str = Field(min_length=1, max_length=120)
     severity: IncidentSeverity

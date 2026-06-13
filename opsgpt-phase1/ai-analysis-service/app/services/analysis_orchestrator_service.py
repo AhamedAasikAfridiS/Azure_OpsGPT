@@ -74,11 +74,13 @@ def _store_failed_result(
     *,
     incident_id: str,
     correlation_id: str,
+    project_id: str | None,
     error_message: str,
     raw_ai_response: dict | None = None,
 ) -> AnalysisResult:
     result = AnalysisResult(
         incident_id=incident_id,
+        project_id=project_id,
         correlation_id=correlation_id,
         raw_ai_response=raw_ai_response,
         analysis_status="failed",
@@ -179,6 +181,7 @@ def process_normalized_alert(
             create_core_incident(
                 {
                     "incident_id": incident_id,
+                    "project_id": group.project_id,
                     "title": (
                         f"{group.service_name} incident detected - "
                         f"{group.severity}"
@@ -195,6 +198,7 @@ def process_normalized_alert(
                 db,
                 incident_id=incident_id,
                 correlation_id=group.correlation_id,
+                project_id=group.project_id,
                 error_message=error_message,
             )
             create_analysis_log(
@@ -231,6 +235,7 @@ def process_normalized_alert(
 
     result = AnalysisResult(
         incident_id=incident_id,
+        project_id=group.project_id,
         correlation_id=group.correlation_id,
         analysis_status="pending",
     )

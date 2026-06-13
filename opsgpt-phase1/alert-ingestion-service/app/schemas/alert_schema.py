@@ -44,6 +44,7 @@ class AlertStatus(StrEnum):
 
 class NormalizedAlertCreate(BaseModel):
     alert_id: str = Field(min_length=1, max_length=255)
+    project_id: str | None = Field(default=None, max_length=50)
     source: AlertSource
     service_name: str = Field(min_length=1, max_length=160)
     alert_type: AlertType
@@ -72,6 +73,7 @@ class NormalizedAlertResponse(NormalizedAlertCreate):
 class RawAlertResponse(BaseModel):
     id: int
     alert_id: str
+    project_id: str | None
     source: AlertSource
     raw_payload: dict[str, Any]
     received_at: datetime

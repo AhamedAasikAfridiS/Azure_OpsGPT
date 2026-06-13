@@ -1,5 +1,6 @@
 export const TOKEN_STORAGE_KEY = "opsgpt_access_token";
 export const USER_STORAGE_KEY = "opsgpt_user";
+export const PROJECT_STORAGE_KEY = "opsgpt_selected_project";
 
 export const USER_ROLES = {
   JUNIOR_ENGINEER: "junior_engineer",

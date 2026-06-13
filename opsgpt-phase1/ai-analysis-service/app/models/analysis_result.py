@@ -1,4 +1,4 @@
-"""AI analysis result."""
+"""Stored AI analysis result."""
 
 from datetime import datetime, timezone
 from typing import Any
@@ -19,6 +19,9 @@ class AnalysisResult(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     incident_id: Mapped[str] = mapped_column(
         String(50), index=True, nullable=False
+    )
+    project_id: Mapped[str | None] = mapped_column(
+        String(50), index=True, nullable=True
     )
     correlation_id: Mapped[str] = mapped_column(
         String(50), index=True, nullable=False

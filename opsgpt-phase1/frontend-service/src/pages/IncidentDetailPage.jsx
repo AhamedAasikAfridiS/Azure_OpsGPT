@@ -4,6 +4,7 @@ import { Link, useParams } from "react-router-dom";
 import {
   addResolutionNote,
   getIncident,
+  getProjectIncident,
   getIncidentTimeline,
   getSimilarIncidents,
   updateIncidentStatus,
@@ -20,8 +21,8 @@ import { INCIDENT_STATUSES } from "../utils/constants";
 import { formatDateTime, formatLabel, toDisplayList } from "../utils/formatters";
 import { canEditIncident } from "../utils/roleUtils";
 
-function IncidentDetailPage() {
-  const { incidentId } = useParams();
+function IncidentDetailPage({ projectScoped = false }) {
+  const { incidentId, projectId } = useParams();
   const { user } = useAuth();
   const [incident, setIncident] = useState(null);
   const [timeline, setTimeline] = useState([]);
@@ -38,7 +39,9 @@ function IncidentDetailPage() {
     setError(null);
     try {
       const [incidentData, timelineData, similarData] = await Promise.all([
-        getIncident(incidentId),
+        projectScoped
+          ? getProjectIncident(projectId, incidentId)
+          : getIncident(incidentId),
         getIncidentTimeline(incidentId),
         getSimilarIncidents(incidentId),
       ]);
@@ -51,7 +54,7 @@ function IncidentDetailPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [incidentId]);
+  }, [incidentId, projectId, projectScoped]);
 
   useEffect(() => {
     loadIncident();
@@ -98,7 +101,15 @@ function IncidentDetailPage() {
     return (
       <div className="page-stack">
         <ErrorMessage error={error || new Error("Incident not found.")} />
-        <Link to="/incidents">Back to incidents</Link>
+        <Link
+          to={
+            projectScoped
+              ? `/projects/${projectId}/incidents`
+              : "/incidents"
+          }
+        >
+          Back to incidents
+        </Link>
       </div>
     );
   }
@@ -111,7 +122,14 @@ function IncidentDetailPage() {
     <div className="page-stack">
       <div className="page-heading page-heading--detail">
         <div>
-          <Link className="back-link" to="/incidents">
+          <Link
+            className="back-link"
+            to={
+              projectScoped
+                ? `/projects/${projectId}/incidents`
+                : "/incidents"
+            }
+          >
             Back to incidents
           </Link>
           <span className="eyebrow">{incident.incident_id}</span>

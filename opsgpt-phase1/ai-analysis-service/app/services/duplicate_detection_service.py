@@ -15,7 +15,10 @@ def find_duplicate_alert(
 ) -> AnalysisAlert | None:
     same_id = db.scalar(
         select(AnalysisAlert)
-        .where(AnalysisAlert.alert_id == alert.alert_id)
+        .where(
+            AnalysisAlert.alert_id == alert.alert_id,
+            AnalysisAlert.project_id == alert.project_id,
+        )
         .order_by(AnalysisAlert.received_at.desc())
     )
     if same_id:
@@ -25,6 +28,7 @@ def find_duplicate_alert(
         select(AnalysisAlert)
         .where(
             AnalysisAlert.service_name == alert.service_name,
+            AnalysisAlert.project_id == alert.project_id,
             AnalysisAlert.alert_type == alert.alert_type.value,
             AnalysisAlert.message == alert.message,
             AnalysisAlert.received_at

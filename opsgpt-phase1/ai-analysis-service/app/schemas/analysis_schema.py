@@ -68,6 +68,7 @@ class FixResponse(BaseModel):
 class AnalysisResultResponse(BaseModel):
     id: int
     incident_id: str
+    project_id: str | None
     correlation_id: str
     ai_summary: str | None
     root_cause: str | None

@@ -76,6 +76,7 @@ def find_correlation_group(
             select(CorrelationGroup)
             .where(
                 CorrelationGroup.service_name == alert.service_name,
+                CorrelationGroup.project_id == alert.project_id,
                 CorrelationGroup.environment == alert.environment,
                 CorrelationGroup.status.in_(ACTIVE_GROUP_STATUSES),
                 CorrelationGroup.updated_at
@@ -107,6 +108,7 @@ def find_group_for_duplicate(
             select(CorrelationGroup)
             .where(
                 CorrelationGroup.service_name == duplicate_of.service_name,
+                CorrelationGroup.project_id == duplicate_of.project_id,
                 CorrelationGroup.environment == duplicate_of.environment,
                 CorrelationGroup.status.in_(ACTIVE_GROUP_STATUSES),
                 CorrelationGroup.updated_at
@@ -134,6 +136,7 @@ def correlate_alert(
     if group is None:
         group = CorrelationGroup(
             correlation_id=_generate_unique_correlation_id(db),
+            project_id=alert.project_id,
             service_name=alert.service_name,
             environment=alert.environment,
             severity=alert.severity,
