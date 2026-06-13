@@ -1,0 +1,38 @@
+{
+  "schemaId": "azureMonitorCommonAlertSchema",
+  "data": {
+    "essentials": {
+      "alertId": "ALT-AZURE-CPU-001",
+      "alertRule": "Payment API CPU Percentage",
+      "severity": "Sev1",
+      "signalType": "Metric",
+      "monitorCondition": "Fired",
+      "monitoringService": "Platform",
+      "alertTargetIDs": [
+        "/subscriptions/local-demo/resourceGroups/opsgpt-demo/providers/Microsoft.Web/sites/payment-api"
+      ],
+      "configurationItems": [
+        "payment-api"
+      ],
+      "firedDateTime": "2026-06-12T08:40:00Z",
+      "description": "CPU percentage is greater than 95"
+    },
+    "alertContext": {
+      "condition": {
+        "allOf": [
+          {
+            "metricName": "CpuPercentage",
+            "operator": "GreaterThan",
+            "threshold": "95",
+            "metricValue": 97.4
+          }
+        ]
+      }
+    },
+    "customProperties": {
+      "environment": "production",
+      "service": "payment-api",
+      "team": "payments"
+    }
+  }
+}

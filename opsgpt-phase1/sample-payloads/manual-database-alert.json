@@ -1,0 +1,14 @@
+{
+  "service_name": "payment-api",
+  "alert_type": "database",
+  "severity": "critical",
+  "message": "Database connection timeout",
+  "description": "Payment API cannot connect to the PostgreSQL database",
+  "environment": "production",
+  "metric_name": "db_connection_timeout",
+  "metric_value": 1,
+  "threshold": 0,
+  "resource_id": "postgresql/payment-db",
+  "runbook_url": "https://internal-runbooks/database-connectivity",
+  "fired_at": "2026-06-12T08:47:00Z"
+}

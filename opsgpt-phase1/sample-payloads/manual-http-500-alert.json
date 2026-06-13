@@ -1,0 +1,14 @@
+{
+  "service_name": "payment-api",
+  "alert_type": "application_error",
+  "severity": "warning",
+  "message": "HTTP 500 error rate increased",
+  "description": "Payment API returned an elevated number of HTTP 500 responses",
+  "environment": "production",
+  "metric_name": "http_500_error_rate",
+  "metric_value": 18.5,
+  "threshold": 5,
+  "dashboard_url": "https://grafana.company.com/d/payment-api",
+  "runbook_url": "https://internal-runbooks/payment-api-errors",
+  "fired_at": "2026-06-12T08:48:30Z"
+}

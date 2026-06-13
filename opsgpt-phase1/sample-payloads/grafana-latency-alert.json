@@ -1,0 +1,30 @@
+{
+  "receiver": "opsgpt-webhook",
+  "status": "firing",
+  "alerts": [
+    {
+      "status": "firing",
+      "labels": {
+        "alertname": "Payment API High Latency",
+        "service": "payment-api",
+        "severity": "critical",
+        "environment": "production",
+        "team": "payments",
+        "alert_type": "api_latency"
+      },
+      "annotations": {
+        "summary": "Payment API latency is above threshold",
+        "description": "p95 latency is greater than 5 seconds",
+        "runbook_url": "https://internal-runbooks/payment-api-latency"
+      },
+      "startsAt": "2026-06-12T08:45:20Z",
+      "generatorURL": "https://grafana.company.com/alerting/rules/payment-api-latency",
+      "dashboardURL": "https://grafana.company.com/d/payment-api",
+      "panelURL": "https://grafana.company.com/d/payment-api?viewPanel=12",
+      "fingerprint": "abc123def456",
+      "values": {
+        "A": 5.8
+      }
+    }
+  ]
+}
