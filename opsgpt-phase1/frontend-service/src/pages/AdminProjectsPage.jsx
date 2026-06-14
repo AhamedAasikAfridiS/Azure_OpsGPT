@@ -1,12 +1,8 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 
 import {
-  addProjectMember,
   createProject,
-  getProjectMembers,
-  getUsers,
-  removeProjectMember,
   updateProject,
 } from "../api/projectApi";
 import Button from "../components/Button";
@@ -14,6 +10,7 @@ import Card from "../components/Card";
 import EmptyState from "../components/EmptyState";
 import ErrorMessage from "../components/ErrorMessage";
 import FormInput from "../components/FormInput";
+import ProjectMembersManager from "../components/ProjectMembersManager";
 import { useProject } from "../context/ProjectContext";
 
 const EMPTY_PROJECT = {
@@ -28,27 +25,11 @@ function AdminProjectsPage() {
   const { projects, refreshProjects } = useProject();
   const [form, setForm] = useState(EMPTY_PROJECT);
   const [editingProjectId, setEditingProjectId] = useState(null);
-  const [users, setUsers] = useState([]);
   const [selectedProjectId, setSelectedProjectId] = useState("");
-  const [members, setMembers] = useState([]);
-  const [memberUserId, setMemberUserId] = useState("");
   const [error, setError] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  useEffect(() => {
-    getUsers().then(setUsers).catch(setError);
-  }, []);
-
-  async function loadMembers(projectId) {
-    setSelectedProjectId(projectId);
-    try {
-      setMembers(await getProjectMembers(projectId));
-    } catch (requestError) {
-      setError(requestError);
-    }
-  }
-
-  async function handleCreate(event) {
+  async function handleSave(event) {
     event.preventDefault();
     setIsSaving(true);
     setError(null);
@@ -80,31 +61,17 @@ function AdminProjectsPage() {
     }
   }
 
-  async function handleAddMember(event) {
-    event.preventDefault();
-    if (!selectedProjectId || !memberUserId) return;
-    try {
-      await addProjectMember(selectedProjectId, {
-        user_id: Number(memberUserId),
-        role_in_project: null,
-      });
-      setMemberUserId("");
-      await loadMembers(selectedProjectId);
-    } catch (requestError) {
-      setError(requestError);
-    }
+  function editProject(project) {
+    setEditingProjectId(project.project_id);
+    setForm({
+      name: project.name,
+      description: project.description || "",
+      environment: project.environment,
+      owner_team: project.owner_team || "",
+      is_active: project.is_active,
+    });
   }
 
-  async function handleRemoveMember(userId) {
-    try {
-      await removeProjectMember(selectedProjectId, userId);
-      await loadMembers(selectedProjectId);
-    } catch (requestError) {
-      setError(requestError);
-    }
-  }
-
-  const userById = Object.fromEntries(users.map((user) => [user.id, user]));
   const selectedProject = projects.find(
     (project) => project.project_id === selectedProjectId,
   );
@@ -126,7 +93,7 @@ function AdminProjectsPage() {
           <h3 className="text-lg font-bold text-slate-900">
             {editingProjectId ? "Edit project" : "Create project"}
           </h3>
-          <form className="mt-5 grid gap-4" onSubmit={handleCreate}>
+          <form className="mt-5 grid gap-4" onSubmit={handleSave}>
             <FormInput
               label="Project name"
               value={form.name}
@@ -211,22 +178,13 @@ function AdminProjectsPage() {
                   <div className="flex flex-wrap gap-2">
                     <Button
                       variant="secondary"
-                      onClick={() => {
-                        setEditingProjectId(project.project_id);
-                        setForm({
-                          name: project.name,
-                          description: project.description || "",
-                          environment: project.environment,
-                          owner_team: project.owner_team || "",
-                          is_active: project.is_active,
-                        });
-                      }}
+                      onClick={() => editProject(project)}
                     >
                       Edit details
                     </Button>
                     <Button
                       variant="secondary"
-                      onClick={() => loadMembers(project.project_id)}
+                      onClick={() => setSelectedProjectId(project.project_id)}
                     >
                       Manage members
                     </Button>
@@ -256,66 +214,10 @@ function AdminProjectsPage() {
       </div>
 
       {selectedProject && (
-        <Card>
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <p className="eyebrow">Membership</p>
-              <h3 className="text-xl font-bold text-slate-900">
-                {selectedProject.name}
-              </h3>
-            </div>
-            <form
-              className="flex items-end gap-3"
-              onSubmit={handleAddMember}
-            >
-              <FormInput
-                label="Assign user"
-                as="select"
-                value={memberUserId}
-                onChange={(event) => setMemberUserId(event.target.value)}
-                required
-              >
-                <option value="">Select user</option>
-                {users.map((user) => (
-                  <option value={user.id} key={user.id}>
-                    {user.name} ({user.role})
-                  </option>
-                ))}
-              </FormInput>
-              <Button type="submit">Add member</Button>
-            </form>
-          </div>
-          <div className="mt-5 divide-y divide-slate-100">
-            {members.length ? (
-              members.map((member) => (
-                <div
-                  key={member.user_id}
-                  className="flex items-center justify-between py-3"
-                >
-                  <div>
-                    <p className="font-semibold text-slate-800">
-                      {userById[member.user_id]?.name ||
-                        `User ${member.user_id}`}
-                    </p>
-                    <p className="text-sm text-slate-500">
-                      {userById[member.user_id]?.email}
-                    </p>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    onClick={() => handleRemoveMember(member.user_id)}
-                  >
-                    Remove
-                  </Button>
-                </div>
-              ))
-            ) : (
-              <p className="py-5 text-sm text-slate-500">
-                No engineers are assigned to this project.
-              </p>
-            )}
-          </div>
-        </Card>
+        <ProjectMembersManager
+          projectId={selectedProject.project_id}
+          projectName={selectedProject.name}
+        />
       )}
     </div>
   );

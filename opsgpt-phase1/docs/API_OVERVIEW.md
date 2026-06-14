@@ -40,6 +40,14 @@ PATCH /users/{user_id}/role
 
 User administration endpoints require the admin role.
 
+Admin user search:
+
+```text
+GET /users/search?query={name_email_or_role}&limit=20
+```
+
+The search returns active users only and never exposes password hashes.
+
 ### Dashboard
 
 ```text
@@ -89,6 +97,10 @@ GET /projects/{project_id}/incidents/{incident_id}
 
 Project modification and membership endpoints require `admin`. Junior and
 senior engineers can read only projects assigned to them.
+
+The admin project screen uses `/users/search` to find employees by name,
+email, or role before assigning them. Duplicate project memberships return
+HTTP 409.
 
 ### Monitoring Sources
 

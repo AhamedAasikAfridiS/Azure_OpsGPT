@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 
 import { getProjectIncidents } from "../api/projectApi";
 import ErrorMessage from "../components/ErrorMessage";
+import BackButton from "../components/BackButton";
 import IncidentTable from "../components/IncidentTable";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { useProject } from "../context/ProjectContext";
@@ -49,6 +50,10 @@ function ProjectIncidentsPage() {
   return (
     <div className="space-y-7">
       <div>
+        <BackButton
+          label="Back to Project Dashboard"
+          to={`/projects/${projectId}/dashboard`}
+        />
         <p className="eyebrow">{project?.name || "Project"}</p>
         <h2 className="page-title">Incidents</h2>
         <p className="mt-2 text-slate-500">

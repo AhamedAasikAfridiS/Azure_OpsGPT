@@ -6,6 +6,7 @@ import {
   getProjectIncidents,
 } from "../api/projectApi";
 import DashboardCard from "../components/DashboardCard";
+import BackButton from "../components/BackButton";
 import ErrorMessage from "../components/ErrorMessage";
 import IncidentTable from "../components/IncidentTable";
 import LoadingSpinner from "../components/LoadingSpinner";
@@ -50,6 +51,7 @@ function ProjectDashboardPage() {
   return (
     <div className="space-y-8">
       <div>
+        <BackButton label="Back to Project Selection" to="/projects" />
         <p className="eyebrow">{project?.environment || "Project"}</p>
         <h2 className="page-title">{project?.name || "Project dashboard"}</h2>
         <p className="mt-2 text-slate-500">

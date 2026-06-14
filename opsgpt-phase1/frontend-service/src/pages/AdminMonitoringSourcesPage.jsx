@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 
 import {
   createMonitoringSource,
@@ -8,6 +8,7 @@ import {
 } from "../api/monitoringSourceApi";
 import { getProject } from "../api/projectApi";
 import Button from "../components/Button";
+import BackButton from "../components/BackButton";
 import Card from "../components/Card";
 import EmptyState from "../components/EmptyState";
 import ErrorMessage from "../components/ErrorMessage";
@@ -80,9 +81,7 @@ function AdminMonitoringSourcesPage() {
   return (
     <div className="space-y-8">
       <div>
-        <Link className="back-link" to="/admin/projects">
-          Back to projects
-        </Link>
+        <BackButton label="Back to Admin Projects" to="/admin/projects" />
         <p className="eyebrow">Monitoring configuration</p>
         <h2 className="page-title">
           {project?.name || "Monitoring sources"}

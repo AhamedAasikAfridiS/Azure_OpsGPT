@@ -466,14 +466,16 @@ alerts but do not trigger AI analysis automatically.
 
 1. Login as `admin`.
 2. Open `Admin Projects` and create a project.
-3. Assign junior or senior engineers from the membership section.
-4. Open the project's `Monitoring sources` page.
-5. Add a Grafana, Azure Monitor, or custom source.
-6. Copy the generated webhook URL.
-7. Configure the monitoring tool's webhook/contact point to POST triggered
+3. Open the membership section and search active users by name, email, or
+   role.
+4. Select a user and choose `Assign to Project`.
+5. Open the project's `Monitoring sources` page.
+6. Add a Grafana, Azure Monitor, or custom source.
+7. Copy the generated webhook URL.
+8. Configure the monitoring tool's webhook/contact point to POST triggered
    alert payloads to that URL.
-8. Login as an assigned engineer and select the project.
-9. View project-scoped dashboard and incident pages.
+9. Login as an assigned engineer and select the project.
+10. View project-scoped dashboard and incident pages.
 
 Dashboard and alert rule URLs are metadata links only. OpsGPT does not scrape
 them.
@@ -556,6 +558,10 @@ them.
 
 ## 16. Development Notes
 
+- Sidebar navigation uses exact route patterns so only the relevant section is
+  highlighted.
+- Project incident, project dashboard, project incident list, and monitoring
+  source pages include logical back navigation.
 - Keep service responsibilities separate.
 - The frontend should call Core API for normal user workflows.
 - Do not make the frontend call AI Analysis directly.

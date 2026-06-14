@@ -2,19 +2,25 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 
 from app.core.rbac import ADMIN, require_roles
 from app.core.security import CurrentUser
 from app.db.database import get_db
 from app.models.user import User
-from app.schemas.user_schema import UserCreate, UserResponse, UserRoleUpdate
+from app.schemas.user_schema import (
+    UserCreate,
+    UserResponse,
+    UserRoleUpdate,
+    UserSearchResponse,
+)
 from app.services.user_service import (
     create_user,
     list_users,
     update_user_role,
 )
+from app.services.user_search_service import search_active_users
 
 router = APIRouter(prefix="/users", tags=["Users"])
 AdminUser = Annotated[User, Depends(require_roles(ADMIN))]
@@ -31,6 +37,16 @@ def get_users(
     db: Annotated[Session, Depends(get_db)],
 ) -> list[User]:
     return list_users(db)
+
+
+@router.get("/search", response_model=list[UserSearchResponse])
+def search_users(
+    _: AdminUser,
+    db: Annotated[Session, Depends(get_db)],
+    query: Annotated[str, Query(min_length=1, max_length=255)],
+    limit: Annotated[int, Query(ge=1, le=50)] = 20,
+) -> list[User]:
+    return search_active_users(db, query, limit)
 
 
 @router.post("", response_model=UserResponse, status_code=status.HTTP_201_CREATED)

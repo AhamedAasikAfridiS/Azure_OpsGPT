@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 
 import {
   addResolutionNote,
@@ -10,6 +10,7 @@ import {
   updateIncidentStatus,
 } from "../api/incidentApi";
 import ErrorMessage from "../components/ErrorMessage";
+import BackButton from "../components/BackButton";
 import LoadingSpinner from "../components/LoadingSpinner";
 import RecommendedFix from "../components/RecommendedFix";
 import SeverityBadge from "../components/SeverityBadge";
@@ -101,15 +102,18 @@ function IncidentDetailPage({ projectScoped = false }) {
     return (
       <div className="page-stack">
         <ErrorMessage error={error || new Error("Incident not found.")} />
-        <Link
+        <BackButton
+          label={
+            projectScoped
+              ? "Back to Project Incidents"
+              : "Back to Incidents"
+          }
           to={
             projectScoped
               ? `/projects/${projectId}/incidents`
               : "/incidents"
           }
-        >
-          Back to incidents
-        </Link>
+        />
       </div>
     );
   }
@@ -122,16 +126,18 @@ function IncidentDetailPage({ projectScoped = false }) {
     <div className="page-stack">
       <div className="page-heading page-heading--detail">
         <div>
-          <Link
-            className="back-link"
+          <BackButton
+            label={
+              projectScoped
+                ? "Back to Project Incidents"
+                : "Back to Incidents"
+            }
             to={
               projectScoped
                 ? `/projects/${projectId}/incidents`
                 : "/incidents"
             }
-          >
-            Back to incidents
-          </Link>
+          />
           <span className="eyebrow">{incident.incident_id}</span>
           <h1>{incident.title}</h1>
           <p className="muted">{incident.service_name}</p>

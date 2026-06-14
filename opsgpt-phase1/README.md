@@ -16,6 +16,7 @@ Phase 1 includes:
 - Four PostgreSQL databases
 - Local JWT authentication and role-based access control
 - Admin-managed projects, memberships, and monitoring source metadata
+- Admin user search for project membership assignment
 - Project-specific webhook URLs and incident isolation
 - Azure Monitor-style, Grafana-style, and manual alert ingestion
 - Rule-based duplicate detection and alert correlation
@@ -40,6 +41,9 @@ ID, message queues, vector search, WebSockets, or production hardening.
 | `notification-service` | Formats and delivers console or Slack notifications and records attempts | Does not analyze or manage incidents |
 
 More detail is available in [docs/MICROSERVICES.md](docs/MICROSERVICES.md).
+
+The project UI uses precise sidebar route matching and provides back
+navigation on project detail and administration screens.
 
 ## Local Development Run Guide
 

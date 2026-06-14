@@ -34,3 +34,13 @@ class UserResponse(BaseModel):
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class UserSearchResponse(BaseModel):
+    id: int
+    name: str
+    email: EmailStr
+    role: UserRole
+    is_active: bool
+
+    model_config = ConfigDict(from_attributes=True)

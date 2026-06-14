@@ -1,14 +1,27 @@
-import { NavLink } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 import { useAuth } from "../context/AuthContext";
 import { useProject } from "../context/ProjectContext";
+import { isActiveNavItem } from "../utils/routeUtils";
 
-const navClass = ({ isActive }) =>
-  `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
-    isActive
-      ? "bg-brand-600 text-white shadow-lg shadow-brand-600/20"
-      : "text-slate-300 hover:bg-slate-800 hover:text-white"
-  }`;
+function SidebarLink({ itemKey, to, children }) {
+  const { pathname } = useLocation();
+  const active = isActiveNavItem(itemKey, pathname);
+
+  return (
+    <Link
+      to={to}
+      aria-current={active ? "page" : undefined}
+      className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
+        active
+          ? "bg-brand-600 text-white shadow-lg shadow-brand-600/20"
+          : "text-slate-300 hover:bg-slate-800 hover:text-white"
+      }`}
+    >
+      {children}
+    </Link>
+  );
+}
 
 function Sidebar() {
   const { user } = useAuth();
@@ -30,35 +43,35 @@ function Sidebar() {
       </div>
 
       <nav className="mt-10 grid gap-2">
-        <NavLink to="/projects" className={navClass}>
+        <SidebarLink itemKey="projects" to="/projects">
           Project selector
-        </NavLink>
-        <NavLink
+        </SidebarLink>
+        <SidebarLink
+          itemKey="dashboard"
           to={
             selectedProjectId ? `${projectBase}/dashboard` : "/projects"
           }
-          className={navClass}
         >
           Dashboard
-        </NavLink>
-        <NavLink
+        </SidebarLink>
+        <SidebarLink
+          itemKey="incidents"
           to={
             selectedProjectId ? `${projectBase}/incidents` : "/projects"
           }
-          className={navClass}
         >
           Incidents
-        </NavLink>
-        <NavLink to="/knowledge-base" className={navClass}>
+        </SidebarLink>
+        <SidebarLink itemKey="knowledgeBase" to="/knowledge-base">
           Knowledge base
-        </NavLink>
-        <NavLink to="/profile" className={navClass}>
+        </SidebarLink>
+        <SidebarLink itemKey="profile" to="/profile">
           Profile
-        </NavLink>
+        </SidebarLink>
         {user?.role === "admin" && (
-          <NavLink to="/admin/projects" className={navClass}>
+          <SidebarLink itemKey="adminProjects" to="/admin/projects">
             Admin projects
-          </NavLink>
+          </SidebarLink>
         )}
       </nav>
 
