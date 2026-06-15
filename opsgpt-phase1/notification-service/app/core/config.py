@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     slack_webhook_url: str = ""
     notification_retry_count: int = Field(default=3, ge=1, le=10)
     notification_timeout_seconds: int = Field(default=10, ge=1, le=120)
-    cors_origins: str = "http://localhost:3000"
+    cors_origins: str = "*"
 
     model_config = SettingsConfigDict(
         env_file=".env",

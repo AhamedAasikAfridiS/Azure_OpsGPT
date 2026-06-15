@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     internal_api_key: str = "change-me-internal-key"
     enable_analysis_forwarding: bool = False
     analysis_forward_timeout_seconds: int = 15
-    cors_origins: str = "http://localhost:3000"
+    cors_origins: str = "*"
 
     model_config = SettingsConfigDict(
         env_file=".env",

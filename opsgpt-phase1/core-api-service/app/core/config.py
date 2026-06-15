@@ -23,7 +23,7 @@ class Settings(BaseSettings):
 
     notification_service_url: str = "http://notification-service:8004"
     enable_notifications: bool = False
-    cors_origins: str = "http://localhost:3000"
+    cors_origins: str = "*"
 
     model_config = SettingsConfigDict(
         env_file=".env",

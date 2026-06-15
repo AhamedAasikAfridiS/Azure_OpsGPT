@@ -30,6 +30,16 @@ Phase 1 includes:
 Phase 1 does not include Azure deployment, Kubernetes, Nginx, Microsoft Entra
 ID, message queues, vector search, WebSockets, or production hardening.
 
+For Phase 1 local and VM testing, all FastAPI services allow every CORS origin
+with credentials disabled. This wildcard policy is not production-safe.
+When the frontend is opened from another machine, configure its browser-facing
+URLs with the VM address:
+
+```env
+VITE_CORE_API_URL=http://<VM_IP>:8001
+VITE_ALERT_INGESTION_URL=http://<VM_IP>:8002
+```
+
 ## Microservices
 
 | Service | Responsibility | Boundary |

@@ -157,6 +157,32 @@ VITE_ALERT_INGESTION_URL=http://localhost:8002
 The browser cannot use Docker-only service names such as
 `http://core-api-service:8001`.
 
+### VM Browser Access And Development CORS
+
+For Phase 1 development and VM testing, every FastAPI backend allows requests
+from all browser origins. The middleware uses:
+
+```python
+allow_origins=["*"]
+allow_credentials=False
+allow_methods=["*"]
+allow_headers=["*"]
+```
+
+Bearer authentication continues to work through the `Authorization` header.
+This wildcard policy is intentionally open for Phase 1 testing and is not
+production-safe.
+
+When a browser accesses OpsGPT on a VM, replace `localhost` in the frontend
+configuration with the VM public or private IP:
+
+```env
+VITE_CORE_API_URL=http://<VM_IP>:8001
+VITE_ALERT_INGESTION_URL=http://<VM_IP>:8002
+```
+
+`localhost` in a browser refers to the user's machine, not the remote VM.
+
 ## 7. Important Default Modes
 
 The default safe local configuration is:

@@ -39,7 +39,7 @@ class Settings(BaseSettings):
     azure_openai_deployment: str = ""
     azure_openai_api_version: str = ""
 
-    cors_origins: str = "http://localhost:3000"
+    cors_origins: str = "*"
 
     model_config = SettingsConfigDict(
         env_file=".env",
