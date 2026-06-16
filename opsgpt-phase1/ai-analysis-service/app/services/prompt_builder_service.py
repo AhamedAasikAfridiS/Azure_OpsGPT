@@ -1,60 +1,60 @@
-"""Structured prompts for real AI providers."""
-
 import json
 from typing import Any
 
-from app.schemas.alert_schema import NormalizedAlertInput
 
-JSON_ONLY_INSTRUCTION = """
-Return JSON only. Do not include Markdown fences, commentary, or text outside
-the JSON object. Base conclusions only on the supplied alert evidence. Do not
-invent metrics, systems, events, or remediation results.
-""".strip()
+def _read(alert: Any, name: str) -> Any:
+    if isinstance(alert, dict):
+        return alert.get(name)
+    return getattr(alert, name, None)
 
 
-def _serialize_alerts(alerts: list[Any]) -> str:
-    serialized = []
-    for alert in alerts:
-        if isinstance(alert, NormalizedAlertInput):
-            serialized.append(alert.model_dump(mode="json"))
-        else:
-            serialized.append(
-                {
-                    "alert_id": alert.alert_id,
-                    "project_id": alert.project_id,
-                    "source": alert.source,
-                    "service_name": alert.service_name,
-                    "alert_type": alert.alert_type,
-                    "severity": alert.severity,
-                    "message": alert.message,
-                    "description": alert.description,
-                    "environment": alert.environment,
-                    "metric_name": alert.metric_name,
-                    "metric_value": alert.metric_value,
-                    "threshold": alert.threshold,
-                    "resource_id": alert.resource_id,
-                    "dashboard_url": alert.dashboard_url,
-                    "runbook_url": alert.runbook_url,
-                    "fired_at": (
-                        alert.fired_at.isoformat() if alert.fired_at else None
-                    ),
-                }
-            )
-    return json.dumps(serialized, default=str, indent=2)
+def _alert_to_dict(alert: Any) -> dict[str, Any]:
+    return {
+        "alert_id": _read(alert, "alert_id"),
+        "project_id": _read(alert, "project_id"),
+        "source": _read(alert, "source"),
+        "source_type": _read(alert, "source_type"),
+        "service_name": _read(alert, "service_name"),
+        "alert_type": _read(alert, "alert_type"),
+        "severity": _read(alert, "severity"),
+        "message": _read(alert, "message"),
+        "description": _read(alert, "description"),
+        "metric_name": _read(alert, "metric_name"),
+        "metric_value": _read(alert, "metric_value"),
+        "threshold": _read(alert, "threshold"),
+        "environment": _read(alert, "environment"),
+        "resource_id": _read(alert, "resource_id"),
+        "dashboard_url": _read(alert, "dashboard_url"),
+        "runbook_url": _read(alert, "runbook_url"),
+        "labels": _read(alert, "labels"),
+        "annotations": _read(alert, "annotations"),
+        "raw_payload_summary": _read(alert, "raw_payload_summary"),
+        "parsing_confidence": _read(alert, "parsing_confidence"),
+        "parser_used": _read(alert, "parser_used"),
+        "fired_at": str(_read(alert, "fired_at") or ""),
+    }
 
 
-def build_full_analysis_prompt(
-    service_name: str,
-    severity: str,
-    alerts: list[Any],
-) -> str:
+def _json(data: Any) -> str:
+    return json.dumps(data, indent=2, default=str)
+
+
+def build_full_analysis_prompt(correlation_group: Any, alerts: list[Any]) -> str:
+    alert_payload = [_alert_to_dict(alert) for alert in alerts]
+    low_confidence = any((alert.get("parsing_confidence") or 50) < 60 for alert in alert_payload)
     return f"""
-You are analyzing an operational incident for service "{service_name}" with
-calculated severity "{severity}".
+Analyze the following OpsGPT incident correlation group.
 
-{JSON_ONLY_INSTRUCTION}
+The alerts may come from Grafana, Azure Monitor, Prometheus Alertmanager, Datadog, New Relic,
+Splunk, Elastic, Sentry, PagerDuty, AWS CloudWatch, Google Cloud Monitoring, Dynatrace,
+AppDynamics, Zabbix, Nagios, or a custom webhook. Payloads may be dynamic.
 
-Return exactly this structure:
+Rules:
+- Use only the evidence provided.
+- Do not invent infrastructure, services, metrics, or causes.
+- If evidence is weak or parsing_confidence is low, lower the confidence_score.
+- Return JSON only.
+- Use this exact JSON shape:
 {{
   "incident_summary": "string",
   "root_cause": "string",
@@ -67,65 +67,60 @@ Return exactly this structure:
   }}
 }}
 
-Alerts:
-{_serialize_alerts(alerts)}
-""".strip()
-
-
-def build_summary_prompt(
-    service_name: str,
-    severity: str,
-    alerts: list[NormalizedAlertInput],
-) -> str:
-    return f"""
-Create a concise operational incident summary for service "{service_name}"
-with severity "{severity}".
-
-{JSON_ONLY_INSTRUCTION}
-
-Return exactly:
-{{"incident_summary": "string"}}
+Correlation group:
+{_json({
+        "correlation_id": getattr(correlation_group, "correlation_id", None),
+        "project_id": getattr(correlation_group, "project_id", None),
+        "service_name": getattr(correlation_group, "service_name", None),
+        "environment": getattr(correlation_group, "environment", None),
+        "severity": getattr(correlation_group, "severity", None),
+        "related_alert_ids": getattr(correlation_group, "related_alert_ids", None),
+        "low_parsing_confidence_present": low_confidence,
+    })}
 
 Alerts:
-{_serialize_alerts(alerts)}
-""".strip()
+{_json(alert_payload)}
+"""
 
 
-def build_rca_prompt(
-    service_name: str,
-    alerts: list[NormalizedAlertInput],
-) -> str:
+def build_incident_analysis_prompt(correlation_group: Any, alerts: list[Any]) -> str:
+    return build_full_analysis_prompt(correlation_group, alerts)
+
+
+def build_summary_prompt(service_name: str, severity: str, alerts: list[Any]) -> str:
+    return build_full_analysis_prompt(
+        type(
+            "SummaryGroup",
+            (),
+            {
+                "correlation_id": "manual-summary",
+                "project_id": None,
+                "service_name": service_name,
+                "environment": "unknown",
+                "severity": severity,
+                "related_alert_ids": [],
+            },
+        )(),
+        alerts,
+    )
+
+
+def build_rca_prompt(service_name: str, alerts: list[Any]) -> str:
+    return build_summary_prompt(service_name=service_name, severity="unknown", alerts=alerts)
+
+
+def build_fix_prompt(root_cause: str, service_name: str, severity: str) -> str:
     return f"""
-Determine the most probable root cause for service "{service_name}" from the
-provided evidence.
+Create recommended incident fixes for this OpsGPT incident.
 
-{JSON_ONLY_INSTRUCTION}
+Service: {service_name}
+Severity: {severity}
+Root cause: {root_cause}
 
-Return exactly:
-{{
-  "root_cause": "string",
-  "supporting_evidence": ["string"],
-  "confidence_score": 0
-}}
-
-Alerts:
-{_serialize_alerts(alerts)}
-""".strip()
-
-
-def build_fix_prompt(
-    root_cause: str,
-    service_name: str,
-    severity: str,
-) -> str:
-    return f"""
-Recommend safe operational remediation for service "{service_name}" with
-severity "{severity}" and probable root cause:
-"{root_cause}"
-
-{JSON_ONLY_INSTRUCTION}
-
-Return exactly:
+Rules:
+- Use only the supplied root cause.
+- Return JSON only.
+- Use this JSON shape:
 {{
   "recommended_fix": {{
     "immediate_actions": ["string"],
@@ -133,4 +128,4 @@ Return exactly:
     "runbook_suggestions": ["string"]
   }}
 }}
-""".strip()
+"""

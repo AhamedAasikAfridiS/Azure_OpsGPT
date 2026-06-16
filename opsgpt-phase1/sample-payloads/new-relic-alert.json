@@ -1,0 +1,12 @@
+{
+  "event_id": "newrelic-incident-001",
+  "conditionName": "Payment API p95 latency",
+  "details": "p95 response time for payment-api is greater than 5 seconds",
+  "severity": "critical",
+  "application_name": "payment-api",
+  "environment": "production",
+  "metricName": "duration.p95",
+  "currentValue": 5.8,
+  "threshold": 5,
+  "runbookUrl": "https://runbooks.example.com/payment-api-latency"
+}

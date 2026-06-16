@@ -1,0 +1,12 @@
+{
+  "eventId": "dynatrace-problem-001",
+  "displayName": "Kubernetes pod crashloop detected",
+  "title": "cart-api pod is crashlooping",
+  "severityLevel": "ERROR",
+  "impactLevel": "SERVICE",
+  "entityTags": {
+    "service": "cart-api",
+    "environment": "production"
+  },
+  "problemURL": "https://dynatrace.example.com/ui/problems/001"
+}

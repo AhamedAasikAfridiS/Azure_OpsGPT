@@ -1,0 +1,13 @@
+{
+  "dedup_key": "custom-alert-001",
+  "app": "payments-worker",
+  "criticality": "high",
+  "reason": "Message queue processing delay is increasing",
+  "env": "production",
+  "measure": "queue.lag.seconds",
+  "currentValue": 180,
+  "limit": 60,
+  "links": {
+    "dashboard_url": "https://observability.example.com/d/payments-worker"
+  }
+}

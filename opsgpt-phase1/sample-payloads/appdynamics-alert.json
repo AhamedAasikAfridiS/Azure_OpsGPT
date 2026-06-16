@@ -1,0 +1,11 @@
+{
+  "event_id": "appd-event-001",
+  "application": "checkout-api",
+  "summary": "Business transaction response time degraded",
+  "severity": "ERROR",
+  "environment": "production",
+  "metric_name": "Average Response Time",
+  "metric_value": 8200,
+  "threshold": 5000,
+  "dashboard_url": "https://appdynamics.example.com/controller/#/location=APP_DASHBOARD"
+}

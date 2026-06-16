@@ -1,101 +1,54 @@
-"""Application configuration loaded from environment variables."""
-
 from functools import lru_cache
 
-from pydantic import Field, model_validator
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
-
-SUPPORTED_AI_PROVIDERS = {"ollama", "gemini", "openai", "azure_openai"}
 
 
 class Settings(BaseSettings):
-    app_name: str = "OpsGPT AI Analysis Service"
     app_env: str = "development"
-    app_host: str = "0.0.0.0"
-    app_port: int = 8003
-
     database_url: str = (
-        "postgresql://opsgpt_analysis:opsgpt_analysis_password@analysis-db:"
-        "5432/opsgpt_analysis_db"
+        "postgresql://opsgpt_analysis:opsgpt_analysis_password@analysis-db:5432/opsgpt_analysis_db"
     )
     core_api_url: str = "http://core-api-service:8001"
     internal_api_key: str = "change-me-internal-key"
-    correlation_window_minutes: int = Field(default=10, ge=1, le=1440)
-    request_timeout_seconds: int = Field(default=60, ge=1, le=600)
+    correlation_window_minutes: int = 10
+    request_timeout_seconds: int = 15
 
-    ai_provider: str
-
-    ollama_base_url: str = "http://localhost:11434"
-    ollama_model: str = ""
-
-    gemini_api_key: str = ""
-    gemini_model: str = ""
-
-    openai_api_key: str = ""
-    openai_model: str = ""
-
-    azure_openai_endpoint: str = ""
-    azure_openai_api_key: str = ""
-    azure_openai_deployment: str = ""
-    azure_openai_api_version: str = ""
+    ai_provider: str = "foundry"
+    foundry_endpoint: str = ""
+    foundry_api_key: str = ""
+    foundry_model_deployment: str = ""
+    foundry_api_version: str = "2024-02-15-preview"
+    foundry_timeout_seconds: int = Field(default=60, ge=1, le=600)
+    foundry_max_retries: int = Field(default=2, ge=0, le=5)
+    foundry_chat_completions_path: str = (
+        "/openai/deployments/{deployment}/chat/completions?api-version={api_version}"
+    )
 
     cors_origins: str = "*"
 
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        extra="ignore",
-        case_sensitive=False,
-    )
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
-    @model_validator(mode="after")
-    def validate_selected_provider(self) -> "Settings":
-        self.ai_provider = self.ai_provider.strip().lower()
-        if self.ai_provider not in SUPPORTED_AI_PROVIDERS:
-            allowed = ", ".join(sorted(SUPPORTED_AI_PROVIDERS))
-            raise ValueError(
-                f"AI_PROVIDER must be one of: {allowed}"
-            )
+    @field_validator("ai_provider")
+    @classmethod
+    def validate_provider(cls, value: str) -> str:
+        normalized = value.strip().lower()
+        if normalized != "foundry":
+            raise ValueError("AI_PROVIDER must be 'foundry' for OpsGPT Phase 1")
+        return normalized
 
-        required_by_provider = {
-            "ollama": {
-                "OLLAMA_BASE_URL": self.ollama_base_url,
-                "OLLAMA_MODEL": self.ollama_model,
-            },
-            "gemini": {
-                "GEMINI_API_KEY": self.gemini_api_key,
-                "GEMINI_MODEL": self.gemini_model,
-            },
-            "openai": {
-                "OPENAI_API_KEY": self.openai_api_key,
-                "OPENAI_MODEL": self.openai_model,
-            },
-            "azure_openai": {
-                "AZURE_OPENAI_ENDPOINT": self.azure_openai_endpoint,
-                "AZURE_OPENAI_API_KEY": self.azure_openai_api_key,
-                "AZURE_OPENAI_DEPLOYMENT": self.azure_openai_deployment,
-                "AZURE_OPENAI_API_VERSION": self.azure_openai_api_version,
-            },
-        }
-        missing = [
-            name
-            for name, value in required_by_provider[self.ai_provider].items()
-            if not value.strip()
-        ]
-        if missing:
-            raise ValueError(
-                f"Missing configuration for AI_PROVIDER={self.ai_provider}: "
-                + ", ".join(missing)
-            )
-        return self
+    @field_validator("foundry_endpoint", "foundry_api_key", "foundry_model_deployment")
+    @classmethod
+    def validate_foundry_required(cls, value: str, info):
+        if not value:
+            raise ValueError(f"{info.field_name.upper()} is required when AI_PROVIDER=foundry")
+        return value
 
     @property
     def cors_origin_list(self) -> list[str]:
-        return [
-            origin.strip()
-            for origin in self.cors_origins.split(",")
-            if origin.strip()
-        ]
+        if not self.cors_origins or self.cors_origins.strip() == "*":
+            return ["*"]
+        return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
 
 
 @lru_cache

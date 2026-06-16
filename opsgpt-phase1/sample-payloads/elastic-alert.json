@@ -1,0 +1,12 @@
+{
+  "ruleId": "elastic-rule-001",
+  "ruleName": "Inventory API exception spike",
+  "message": "Inventory API exception count is above threshold",
+  "level": "error",
+  "service": "inventory-api",
+  "environment": "production",
+  "metric": "exceptions.count",
+  "value": 120,
+  "threshold": 50,
+  "dashboardURL": "https://kibana.example.com/app/dashboards#/view/inventory-api"
+}

@@ -1,51 +1,19 @@
-"""Alert correlation group persistence."""
-
-from datetime import datetime, timezone
-from typing import Any
-
-from sqlalchemy import DateTime, JSON, String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import JSON, Column, DateTime, Integer, String, func
 
 from app.db.database import Base
-
-
-def utc_now() -> datetime:
-    return datetime.now(timezone.utc)
 
 
 class CorrelationGroup(Base):
     __tablename__ = "correlation_groups"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    correlation_id: Mapped[str] = mapped_column(
-        String(50), unique=True, index=True, nullable=False
-    )
-    project_id: Mapped[str | None] = mapped_column(
-        String(50), index=True, nullable=True
-    )
-    service_name: Mapped[str] = mapped_column(
-        String(160), index=True, nullable=False
-    )
-    environment: Mapped[str] = mapped_column(
-        String(50), index=True, nullable=False
-    )
-    severity: Mapped[str] = mapped_column(String(30), nullable=False)
-    status: Mapped[str] = mapped_column(
-        String(40), default="open", index=True, nullable=False
-    )
-    related_alert_ids: Mapped[list[Any]] = mapped_column(
-        JSON, default=list, nullable=False
-    )
-    incident_id: Mapped[str | None] = mapped_column(
-        String(50), index=True, nullable=True
-    )
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=utc_now, nullable=False
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        default=utc_now,
-        onupdate=utc_now,
-        index=True,
-        nullable=False,
-    )
+    id = Column(Integer, primary_key=True, index=True)
+    correlation_id = Column(String(120), unique=True, index=True, nullable=False)
+    project_id = Column(String(80), nullable=True, index=True)
+    service_name = Column(String(120), nullable=False, index=True)
+    environment = Column(String(80), nullable=False, index=True)
+    severity = Column(String(40), nullable=False, index=True)
+    status = Column(String(40), default="open", nullable=False, index=True)
+    related_alert_ids = Column(JSON, nullable=False, default=list)
+    incident_id = Column(String(80), nullable=True, index=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)

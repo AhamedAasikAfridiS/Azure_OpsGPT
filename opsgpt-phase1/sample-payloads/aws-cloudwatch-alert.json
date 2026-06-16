@@ -1,0 +1,13 @@
+{
+  "AlarmName": "OrdersAPICPUHigh",
+  "AlarmDescription": "CPU utilization above 90 percent for orders-api",
+  "AWSAccountId": "123456789012",
+  "NewStateValue": "ALARM",
+  "NewStateReason": "Threshold Crossed: 1 datapoint was greater than the threshold",
+  "Trigger": {
+    "MetricName": "CPUUtilization",
+    "Threshold": 90
+  },
+  "service": "orders-api",
+  "environment": "production"
+}

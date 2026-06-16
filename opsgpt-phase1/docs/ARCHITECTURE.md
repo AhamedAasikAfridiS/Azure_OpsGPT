@@ -1,157 +1,45 @@
-# OpsGPT Phase 1 Architecture
+# OpsGPT Architecture
 
-## Architecture Style
-
-OpsGPT Phase 1 uses a lightweight event-driven microservices architecture over
-synchronous REST APIs.
-
-"Event-driven" describes the business flow: a monitoring event triggers alert
-processing, incident analysis, persistence, and notification. Phase 1 uses
-direct HTTP calls between services rather than a message broker. A later phase
-can replace selected HTTP handoffs with a queue without changing service data
-ownership.
-
-## High-Level Flow
+OpsGPT Phase 1 is a local, webhook/event-driven microservices application.
 
 ```text
-Azure Monitor / Grafana / Manual Submission
-                    |
-                    v
-       Project Webhook + Token Validation
-                    |
-                    v
-          Alert Ingestion Service
-                    |
-                    v
-           AI Analysis Service
-                    |
-                    v
-             Core API Service
-              |            |
-              v            v
-      Frontend Service   Notification Service
-                               |
-                               v
-                         Console or Slack
+Grafana / Azure Monitor / Datadog / Prometheus / Other Source
+        |
+        | triggered webhook payload
+        v
+Alert Ingestion Service
+        |
+        | normalized alert
+        v
+AI Analysis Service
+        |
+        | internal REST API
+        v
+Core API Service
+        |
+        | user-facing REST API
+        v
+Frontend Service
+
+Core API Service -> Notification Service
 ```
 
-## Monitoring Integration
+Grafana, Azure Monitor, Datadog, and other tools continuously monitor systems. OpsGPT does not scrape dashboards or monitoring UIs. OpsGPT receives alert payloads only when those tools trigger webhook notifications.
 
-Grafana, Azure Monitor, and similar monitoring tools continuously observe
-applications, infrastructure, metrics, logs, and health signals.
+## Project-Based Webhooks
 
-When a configured alert rule fires, the monitoring tool sends an HTTP webhook
-to Alert Ingestion Service. OpsGPT processes that triggered payload.
-
-OpsGPT does not:
-
-- Scrape Grafana dashboards
-- Poll Azure Monitor dashboards
-- Read chart pixels
-- Continuously query the monitoring user interface
-- Replace the monitoring platform
-
-The monitoring platform detects the condition. OpsGPT begins its work after it
-receives the alert webhook.
-
-## Processing Stages
-
-### 1. Alert Reception
-
-Alert Ingestion accepts Azure Monitor Common Alert Schema payloads, Grafana
-webhooks, and manual alert requests. It stores the original JSON before
-normalization so rejected payloads remain auditable.
-
-For project monitoring, an admin creates a project and monitoring source in
-Core API. Core returns a source-specific webhook path and token. Grafana,
-Azure Monitor, or a custom sender is configured to POST triggered alerts to
-that project webhook. Alert Ingestion validates the token through Core before
-processing the payload.
-
-### 2. Normalization
-
-Source-specific parsers convert alerts into one common schema containing the
-service, environment, alert type, severity, message, metrics, resource links,
-and timestamps.
-
-### 3. Correlation and AI Analysis
-
-AI Analysis stores normalized alerts, detects duplicates, and groups related
-alerts by:
-
-- Project
-- Service name
-- Environment
-- Correlation time window
-- Related alert types
-- Same or nearby severity
-
-It then calls the configured real AI provider for structured JSON containing
-the summary, root cause, evidence, confidence score, and recommendations.
-
-### 4. Incident Ownership
-
-AI Analysis never writes to the Core database. It calls Core API internal REST
-endpoints using the shared `X-Internal-API-Key`.
-
-Core API owns:
-
-- Users and roles
-- Projects and memberships
-- Monitoring source metadata and webhook tokens
-- Incidents
-- Status and resolution data
-- Timelines
-- Audit logs
-- Knowledge-base entries
-
-### 5. User Experience
-
-The React frontend authenticates with Core API and displays dashboards,
-incidents, AI analysis, timelines, knowledge entries, and profile information.
-Senior engineers and admins receive incident editing controls. Junior
-engineers receive a read-only interface.
-
-After login, users select a project. Admins can see every project. Junior and
-senior engineers can see only projects assigned through Core memberships.
-Project routes prevent incidents from being read across project boundaries.
-
-### 6. Notification
-
-When enabled, Core API sends complete event payloads to Notification Service.
-Notification Service formats the event and delivers it through the configured
-console or Slack channel. It stores both the notification and every delivery
-attempt.
-
-## Data Ownership
-
-Each backend service owns one PostgreSQL database:
-
-| Service | Database | Owned Data |
-| --- | --- | --- |
-| Core API | `core-db` | Users, incidents, status, timeline, notes, audits, knowledge base |
-| Alert Ingestion | `alert-db` | Raw alerts, normalized alerts, ingestion logs |
-| AI Analysis | `analysis-db` | Analysis alerts, correlation groups, results, analysis logs |
-| Notification | `notification-db` | Notifications, attempts, template records |
-
-Services communicate through APIs instead of reading another service's
-database.
-
-## Local Network
-
-Docker Compose places every container on `opsgpt-network`. Docker DNS resolves
-service names such as:
+Admins create projects and monitoring sources in the Core API. Each monitoring source gets a webhook token and path:
 
 ```text
-core-api-service
-alert-ingestion-service
-ai-analysis-service
-notification-service
-core-db
-alert-db
-analysis-db
-notification-db
+/alerts/webhook/project/{project_id}/{webhook_token}
 ```
 
-Only application ports are published to the host. Database ports remain
-internal.
+The Alert Ingestion Service validates the project and token with the Core API, selects the parser for the source type, stores the raw payload, normalizes it, and optionally forwards it to AI Analysis.
+
+## Dynamic Parsing
+
+Alert Ingestion uses source-specific parsers when possible. If a payload does not match a fixed vendor schema, the universal parser recursively searches common field aliases and assigns safe defaults. This allows production-style dynamic payloads to be accepted without brittle schema failures.
+
+## AI Analysis
+
+AI Analysis uses Microsoft Foundry / Azure AI Foundry only. It sends structured prompts asking for JSON incident analysis. If the Foundry call fails or returns invalid JSON, the failure is stored and the incident pipeline continues with deterministic incident data.

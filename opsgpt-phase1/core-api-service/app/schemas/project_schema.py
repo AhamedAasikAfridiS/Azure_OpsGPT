@@ -9,6 +9,19 @@ from pydantic import BaseModel, ConfigDict, Field
 class MonitoringSourceType(StrEnum):
     grafana = "grafana"
     azure_monitor = "azure_monitor"
+    prometheus_alertmanager = "prometheus_alertmanager"
+    datadog = "datadog"
+    new_relic = "new_relic"
+    splunk = "splunk"
+    elastic = "elastic"
+    sentry = "sentry"
+    pagerduty = "pagerduty"
+    aws_cloudwatch = "aws_cloudwatch"
+    google_cloud_monitoring = "google_cloud_monitoring"
+    dynatrace = "dynatrace"
+    appdynamics = "appdynamics"
+    zabbix = "zabbix"
+    nagios = "nagios"
     custom = "custom"
 
 

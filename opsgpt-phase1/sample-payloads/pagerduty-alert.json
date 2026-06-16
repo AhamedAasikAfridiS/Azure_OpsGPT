@@ -1,0 +1,14 @@
+{
+  "incident_key": "pagerduty-incident-001",
+  "event_action": "trigger",
+  "summary": "Production database connection pool exhausted",
+  "severity": "critical",
+  "source": "payment-api",
+  "component": "postgres",
+  "group": "payments",
+  "custom_details": {
+    "environment": "production",
+    "metric_name": "db.connection_pool.available",
+    "value": 0
+  }
+}

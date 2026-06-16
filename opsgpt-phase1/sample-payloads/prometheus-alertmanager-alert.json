@@ -1,0 +1,24 @@
+{
+  "receiver": "opsgpt",
+  "status": "firing",
+  "alerts": [
+    {
+      "status": "firing",
+      "labels": {
+        "alertname": "PaymentAPIDown",
+        "service": "payment-api",
+        "severity": "critical",
+        "environment": "production",
+        "alert_type": "availability"
+      },
+      "annotations": {
+        "summary": "Payment API health check is failing",
+        "description": "The payment-api /health endpoint has been down for 5 minutes",
+        "runbook_url": "https://runbooks.example.com/payment-api-availability"
+      },
+      "startsAt": "2026-06-16T08:45:20Z",
+      "generatorURL": "https://prometheus.example.com/alerts/payment-api-down",
+      "fingerprint": "prom-payment-api-down-001"
+    }
+  ]
+}

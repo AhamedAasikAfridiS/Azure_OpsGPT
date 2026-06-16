@@ -1,32 +1,26 @@
-"""Strict JSON extraction for AI provider responses."""
-
 import json
+import re
 from typing import Any
 
 
-class InvalidAIResponseError(ValueError):
-    pass
+def parse_json_object(content: str | dict[str, Any]) -> dict[str, Any]:
+    if isinstance(content, dict):
+        return content
 
-
-def parse_json_object(content: str) -> dict[str, Any]:
-    cleaned = content.strip()
-    if cleaned.startswith("```"):
-        lines = cleaned.splitlines()
-        if lines and lines[0].startswith("```"):
-            lines = lines[1:]
-        if lines and lines[-1].strip() == "```":
-            lines = lines[:-1]
-        cleaned = "\n".join(lines).strip()
+    text = (content or "").strip()
+    if text.startswith("```"):
+        text = re.sub(r"^```(?:json)?", "", text, flags=re.IGNORECASE).strip()
+        text = re.sub(r"```$", "", text).strip()
 
     try:
-        parsed = json.loads(cleaned)
-    except json.JSONDecodeError as exc:
-        raise InvalidAIResponseError(
-            "AI provider returned invalid JSON"
-        ) from exc
+        parsed = json.loads(text)
+    except json.JSONDecodeError:
+        start = text.find("{")
+        end = text.rfind("}")
+        if start == -1 or end == -1 or end <= start:
+            raise
+        parsed = json.loads(text[start : end + 1])
 
     if not isinstance(parsed, dict):
-        raise InvalidAIResponseError(
-            "AI provider response must be a JSON object"
-        )
+        raise ValueError("AI response must be a JSON object")
     return parsed

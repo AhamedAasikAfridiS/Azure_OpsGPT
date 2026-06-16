@@ -1,38 +1,27 @@
-import { formatLabel, toDisplayList } from "../utils/formatters";
-
-function RecommendedFix({ recommendation }) {
-  if (!recommendation) {
-    return <p className="muted">No recommended fix is available.</p>;
-  }
-
-  if (Array.isArray(recommendation)) {
-    return (
-      <ul className="detail-list">
-        {toDisplayList(recommendation).map((item, index) => (
-          <li key={`${item}-${index}`}>{item}</li>
+function ListSection({ title, items }) {
+  if (!items || items.length === 0) return null;
+  return (
+    <div className="fix-section">
+      <h4>{title}</h4>
+      <ul>
+        {items.map((item, index) => (
+          <li key={`${title}-${index}`}>{item}</li>
         ))}
       </ul>
-    );
-  }
-
-  if (typeof recommendation !== "object") {
-    return <p>{String(recommendation)}</p>;
-  }
-
-  return (
-    <div className="recommendation-grid">
-      {Object.entries(recommendation).map(([section, actions]) => (
-        <section key={section}>
-          <h4>{formatLabel(section)}</h4>
-          <ul className="detail-list">
-            {toDisplayList(actions).map((action, index) => (
-              <li key={`${action}-${index}`}>{action}</li>
-            ))}
-          </ul>
-        </section>
-      ))}
     </div>
   );
 }
 
-export default RecommendedFix;
+export default function RecommendedFix({ recommendedFix }) {
+  if (!recommendedFix || Object.keys(recommendedFix).length === 0) {
+    return <p className="muted">AI analysis is not available for this incident yet.</p>;
+  }
+
+  return (
+    <div className="recommended-fix">
+      <ListSection title="Immediate Actions" items={recommendedFix.immediate_actions} />
+      <ListSection title="Long Term Actions" items={recommendedFix.long_term_actions} />
+      <ListSection title="Runbook Suggestions" items={recommendedFix.runbook_suggestions} />
+    </div>
+  );
+}

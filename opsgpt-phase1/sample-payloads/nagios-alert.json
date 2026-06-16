@@ -1,0 +1,10 @@
+{
+  "id": "nagios-alert-001",
+  "host": "shipping-api-01",
+  "service": "shipping-api",
+  "state": "CRITICAL",
+  "output": "HTTP check failed: connection timeout",
+  "environment": "production",
+  "alert_type": "availability",
+  "timestamp": "2026-06-16T08:45:20Z"
+}

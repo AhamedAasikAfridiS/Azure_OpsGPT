@@ -1,0 +1,13 @@
+{
+  "sid": "splunk-search-001",
+  "search_name": "Database connection timeout",
+  "description": "PostgreSQL connection timeout messages detected for orders-api",
+  "severity": "high",
+  "service_name": "orders-api",
+  "environment": "production",
+  "result": {
+    "error_count": 42,
+    "host": "orders-api-01"
+  },
+  "dashboard_url": "https://splunk.example.com/app/search/orders-db-timeouts"
+}

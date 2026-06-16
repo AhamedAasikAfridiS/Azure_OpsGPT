@@ -112,20 +112,15 @@ services:
       CORE_API_URL: http://core-api-service:8001
       INTERNAL_API_KEY: ${INTERNAL_API_KEY:-change-me-internal-key}
       CORRELATION_WINDOW_MINUTES: 10
-      AI_PROVIDER: ${AI_PROVIDER:-ollama}
-      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
-      OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.1}
-      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
-      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-1.5-flash}
-      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
-      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
-      AZURE_OPENAI_ENDPOINT: ${AZURE_OPENAI_ENDPOINT:-}
-      AZURE_OPENAI_API_KEY: ${AZURE_OPENAI_API_KEY:-}
-      AZURE_OPENAI_DEPLOYMENT: ${AZURE_OPENAI_DEPLOYMENT:-}
-      AZURE_OPENAI_API_VERSION: ${AZURE_OPENAI_API_VERSION:-2024-02-15-preview}
+      AI_PROVIDER: ${AI_PROVIDER:-foundry}
+      FOUNDRY_ENDPOINT: ${FOUNDRY_ENDPOINT:-}
+      FOUNDRY_API_KEY: ${FOUNDRY_API_KEY:-}
+      FOUNDRY_MODEL_DEPLOYMENT: ${FOUNDRY_MODEL_DEPLOYMENT:-}
+      FOUNDRY_API_VERSION: ${FOUNDRY_API_VERSION:-2024-02-15-preview}
+      FOUNDRY_TIMEOUT_SECONDS: ${FOUNDRY_TIMEOUT_SECONDS:-60}
+      FOUNDRY_MAX_RETRIES: ${FOUNDRY_MAX_RETRIES:-2}
+      FOUNDRY_CHAT_COMPLETIONS_PATH: "/openai/deployments/{deployment}/chat/completions?api-version={api_version}"
       CORS_ORIGINS: "*" # Phase 1 development/testing only
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     ports:
       - "8003:8003"
     depends_on:
@@ -192,7 +187,7 @@ services:
       VITE_CORE_API_URL: http://localhost:8001
       VITE_ALERT_INGESTION_URL: http://localhost:8002
     ports:
-      - "3000:3000"
+      - "80:3000"
     depends_on:
       core-api-service:
         condition: service_started

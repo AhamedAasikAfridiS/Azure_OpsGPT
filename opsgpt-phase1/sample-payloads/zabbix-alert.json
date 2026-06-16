@@ -1,0 +1,10 @@
+{
+  "event_id": "zabbix-event-001",
+  "host": "inventory-db",
+  "subject": "Disk space is low on inventory-db",
+  "message": "Filesystem /var/lib/postgresql has less than 5 percent free space",
+  "severity": "High",
+  "environment": "production",
+  "metric": "vfs.fs.size[/var/lib/postgresql,pfree]",
+  "value": 4.2
+}

@@ -1,30 +1,24 @@
 import apiClient from "./apiClient";
 
-export async function getMonitoringSources(projectId) {
-  const response = await apiClient.get(
-    `/projects/${projectId}/monitoring-sources`,
-  );
-  return response.data;
-}
+export const getMonitoringSources = (projectId) =>
+  apiClient.get(`/projects/${projectId}/monitoring-sources`);
 
-export async function createMonitoringSource(projectId, payload) {
-  const response = await apiClient.post(
-    `/projects/${projectId}/monitoring-sources`,
-    payload,
-  );
-  return response.data;
-}
+export const getMonitoringSource = (projectId, sourceId) =>
+  apiClient.get(`/projects/${projectId}/monitoring-sources/${sourceId}`);
 
-export async function updateMonitoringSource(projectId, sourceId, payload) {
-  const response = await apiClient.patch(
-    `/projects/${projectId}/monitoring-sources/${sourceId}`,
-    payload,
-  );
-  return response.data;
-}
+export const createMonitoringSource = (projectId, payload) =>
+  apiClient.post(`/projects/${projectId}/monitoring-sources`, payload);
 
-export async function deactivateMonitoringSource(projectId, sourceId) {
-  await apiClient.delete(
-    `/projects/${projectId}/monitoring-sources/${sourceId}`,
-  );
-}
+export const updateMonitoringSource = (projectId, sourceId, payload) =>
+  apiClient.patch(`/projects/${projectId}/monitoring-sources/${sourceId}`, payload);
+
+export const deleteMonitoringSource = (projectId, sourceId) =>
+  apiClient.delete(`/projects/${projectId}/monitoring-sources/${sourceId}`);
+
+export default {
+  getMonitoringSources,
+  getMonitoringSource,
+  createMonitoringSource,
+  updateMonitoringSource,
+  deleteMonitoringSource,
+};

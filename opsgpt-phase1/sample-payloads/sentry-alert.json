@@ -1,0 +1,13 @@
+{
+  "alert_uid": "sentry-alert-001",
+  "title": "Unhandled exception in billing-api",
+  "message": "TypeError raised in payment settlement path",
+  "level": "error",
+  "project": "billing-api",
+  "environment": "production",
+  "event": {
+    "exception": "TypeError",
+    "stacktrace": "billing.settlement.process"
+  },
+  "url": "https://sentry.example.com/organizations/acme/issues/1001"
+}

@@ -1,15 +1,26 @@
-"""Normalized alert schemas accepted from Alert Ingestion."""
-
 from datetime import datetime
 from enum import StrEnum
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel
 
 
 class AlertSource(StrEnum):
     azure_monitor = "azure_monitor"
     grafana = "grafana"
+    prometheus_alertmanager = "prometheus_alertmanager"
+    datadog = "datadog"
+    new_relic = "new_relic"
+    splunk = "splunk"
+    elastic = "elastic"
+    sentry = "sentry"
+    pagerduty = "pagerduty"
+    aws_cloudwatch = "aws_cloudwatch"
+    google_cloud_monitoring = "google_cloud_monitoring"
+    dynatrace = "dynatrace"
+    appdynamics = "appdynamics"
+    zabbix = "zabbix"
+    nagios = "nagios"
     manual = "manual"
     custom = "custom"
 
@@ -20,19 +31,17 @@ class AlertType(StrEnum):
     api_latency = "api_latency"
     database = "database"
     application_error = "application_error"
+    disk = "disk"
+    network = "network"
+    kubernetes = "kubernetes"
+    availability = "availability"
     custom = "custom"
 
 
-class AlertSeverity(StrEnum):
+class Severity(StrEnum):
     critical = "critical"
     warning = "warning"
     informational = "informational"
-
-
-class AlertEnvironment(StrEnum):
-    production = "production"
-    staging = "staging"
-    development = "development"
 
 
 class AlertStatus(StrEnum):
@@ -43,46 +52,26 @@ class AlertStatus(StrEnum):
 
 
 class NormalizedAlertInput(BaseModel):
-    alert_id: str = Field(min_length=1, max_length=255)
-    project_id: str | None = Field(default=None, max_length=50)
+    alert_id: str
+    project_id: str | None = None
     source: AlertSource
-    service_name: str = Field(min_length=1, max_length=160)
+    source_type: AlertSource | None = None
+    service_name: str
     alert_type: AlertType
-    severity: AlertSeverity
-    message: str = Field(min_length=1)
+    severity: Severity
+    message: str
     description: str | None = None
-    metric_name: str | None = Field(default=None, max_length=255)
+    metric_name: str | None = None
     metric_value: Any | None = None
-    threshold: float | str | None = None
-    environment: AlertEnvironment = AlertEnvironment.production
+    threshold: str | None = None
+    environment: str = "production"
     resource_id: str | None = None
     dashboard_url: str | None = None
     runbook_url: str | None = None
     fired_at: datetime | None = None
-    status: AlertStatus = AlertStatus.processed
-
-    model_config = ConfigDict(extra="ignore")
-
-
-class StoredAnalysisAlertResponse(BaseModel):
-    id: int
-    alert_id: str
-    project_id: str | None
-    source: AlertSource
-    service_name: str
-    alert_type: AlertType
-    severity: AlertSeverity
-    message: str
-    description: str | None
-    environment: AlertEnvironment
-    metric_name: str | None
-    metric_value: Any | None
-    threshold: str | None
-    resource_id: str | None
-    dashboard_url: str | None
-    runbook_url: str | None
-    fired_at: datetime | None
-    received_at: datetime
-    is_duplicate: bool
-
-    model_config = ConfigDict(from_attributes=True)
+    labels: dict[str, Any] | None = None
+    annotations: dict[str, Any] | None = None
+    raw_payload_summary: dict[str, Any] | None = None
+    parsing_confidence: int = 50
+    parser_used: str | None = None
+    status: AlertStatus = AlertStatus.received

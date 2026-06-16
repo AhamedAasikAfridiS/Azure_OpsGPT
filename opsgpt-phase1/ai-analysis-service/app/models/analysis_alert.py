@@ -1,53 +1,33 @@
-"""Normalized alerts stored for analysis."""
-
-from datetime import datetime, timezone
-from typing import Any
-
-from sqlalchemy import Boolean, DateTime, JSON, String, Text
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import JSON, Boolean, Column, DateTime, Integer, String, func
 
 from app.db.database import Base
-
-
-def utc_now() -> datetime:
-    return datetime.now(timezone.utc)
 
 
 class AnalysisAlert(Base):
     __tablename__ = "analysis_alerts"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    alert_id: Mapped[str] = mapped_column(
-        String(255), index=True, nullable=False
-    )
-    project_id: Mapped[str | None] = mapped_column(
-        String(50), index=True, nullable=True
-    )
-    source: Mapped[str] = mapped_column(String(50), nullable=False)
-    service_name: Mapped[str] = mapped_column(
-        String(160), index=True, nullable=False
-    )
-    alert_type: Mapped[str] = mapped_column(
-        String(50), index=True, nullable=False
-    )
-    severity: Mapped[str] = mapped_column(
-        String(30), index=True, nullable=False
-    )
-    message: Mapped[str] = mapped_column(Text, nullable=False)
-    description: Mapped[str | None] = mapped_column(Text)
-    environment: Mapped[str] = mapped_column(
-        String(50), index=True, nullable=False
-    )
-    metric_name: Mapped[str | None] = mapped_column(String(255))
-    metric_value: Mapped[Any | None] = mapped_column(JSON)
-    threshold: Mapped[str | None] = mapped_column(String(255))
-    resource_id: Mapped[str | None] = mapped_column(Text)
-    dashboard_url: Mapped[str | None] = mapped_column(Text)
-    runbook_url: Mapped[str | None] = mapped_column(Text)
-    fired_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    received_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=utc_now, index=True, nullable=False
-    )
-    is_duplicate: Mapped[bool] = mapped_column(
-        Boolean, default=False, index=True, nullable=False
-    )
+    id = Column(Integer, primary_key=True, index=True)
+    alert_id = Column(String(120), unique=True, index=True, nullable=False)
+    project_id = Column(String(80), nullable=True, index=True)
+    source = Column(String(80), nullable=False, index=True)
+    source_type = Column(String(80), nullable=True, index=True)
+    service_name = Column(String(120), nullable=False, index=True)
+    alert_type = Column(String(80), nullable=False, index=True)
+    severity = Column(String(40), nullable=False, index=True)
+    message = Column(String(1000), nullable=False)
+    description = Column(String(2000), nullable=True)
+    environment = Column(String(80), default="production", nullable=False, index=True)
+    metric_name = Column(String(120), nullable=True)
+    metric_value = Column(JSON, nullable=True)
+    threshold = Column(String(120), nullable=True)
+    resource_id = Column(String(500), nullable=True)
+    dashboard_url = Column(String(500), nullable=True)
+    runbook_url = Column(String(500), nullable=True)
+    labels = Column(JSON, nullable=True)
+    annotations = Column(JSON, nullable=True)
+    raw_payload_summary = Column(JSON, nullable=True)
+    parsing_confidence = Column(Integer, default=50, nullable=False)
+    parser_used = Column(String(120), nullable=True)
+    fired_at = Column(DateTime(timezone=True), nullable=True)
+    received_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    is_duplicate = Column(Boolean, default=False, nullable=False)

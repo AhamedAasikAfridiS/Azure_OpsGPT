@@ -1,0 +1,13 @@
+{
+  "id": "datadog-evt-001",
+  "title": "Checkout API error rate is high",
+  "message": "HTTP 500 error rate is above 10 percent for checkout-api",
+  "alert_type": "application_error",
+  "service": "checkout-api",
+  "priority": "P1",
+  "environment": "production",
+  "metric_name": "http.server.errors",
+  "metric_value": 14.2,
+  "dashboard_url": "https://app.datadoghq.com/dashboard/checkout-api",
+  "source_url": "https://app.datadoghq.com/monitors/12345"
+}

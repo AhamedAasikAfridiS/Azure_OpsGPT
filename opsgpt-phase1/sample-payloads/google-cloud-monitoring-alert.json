@@ -1,0 +1,14 @@
+{
+  "incident": {
+    "incident_id": "gcm-incident-001",
+    "resource_name": "projects/demo/services/profile-api",
+    "condition_name": "Profile API uptime check failed",
+    "summary": "Uptime check failed for profile-api",
+    "state": "open",
+    "severity": "critical",
+    "started_at": "2026-06-16T08:45:20Z",
+    "url": "https://console.cloud.google.com/monitoring/alerting/incidents/gcm-incident-001"
+  },
+  "service": "profile-api",
+  "environment": "production"
+}
