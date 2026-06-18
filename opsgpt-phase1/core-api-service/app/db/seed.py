@@ -3,6 +3,7 @@ import logging
 from app.core.security import hash_password
 from app.db.database import SessionLocal
 from app.models.models import User
+from sqlalchemy import func
 
 logger = logging.getLogger(__name__)
 
@@ -27,13 +28,19 @@ def seed_default_users() -> None:
     db = SessionLocal()
     try:
         for item in DEFAULT_USERS:
-            existing = db.query(User).filter(User.email == item["email"]).first()
+            email = item["email"].lower()
+            existing = db.query(User).filter(func.lower(User.email) == email).first()
             if existing:
+                existing.name = item["name"]
+                existing.email = email
+                existing.password_hash = hash_password(item["password"])
+                existing.role = item["role"]
+                existing.is_active = True
                 continue
             db.add(
                 User(
                     name=item["name"],
-                    email=item["email"],
+                    email=email,
                     password_hash=hash_password(item["password"]),
                     role=item["role"],
                     is_active=True,
