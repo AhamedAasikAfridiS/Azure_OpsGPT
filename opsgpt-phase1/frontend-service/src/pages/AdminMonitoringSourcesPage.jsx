@@ -85,9 +85,15 @@ export default function AdminMonitoringSourcesPage() {
     }
   };
 
-  const copyWebhookPath = async (path) => {
-    if (!path) return;
-    await navigator.clipboard?.writeText(path);
+  const getWebhookUrl = (path) => {
+    if (!path) return "";
+    return `${window.location.origin}${path}`;
+  };
+
+  const copyWebhookUrl = async (path) => {
+    const webhookUrl = getWebhookUrl(path);
+    if (!webhookUrl) return;
+    await navigator.clipboard?.writeText(webhookUrl);
   };
 
   return (
@@ -170,8 +176,8 @@ export default function AdminMonitoringSourcesPage() {
                     <td>{source.source_name}</td>
                     <td>{sourceTypes.find(([value]) => value === source.source_type)?.[1] || source.source_type}</td>
                     <td>
-                      <code>{source.webhook_path}</code>
-                      <Button variant="secondary" onClick={() => copyWebhookPath(source.webhook_path)}>
+                      <code>{getWebhookUrl(source.webhook_path)}</code>
+                      <Button variant="secondary" onClick={() => copyWebhookUrl(source.webhook_path)}>
                         Copy
                       </Button>
                     </td>

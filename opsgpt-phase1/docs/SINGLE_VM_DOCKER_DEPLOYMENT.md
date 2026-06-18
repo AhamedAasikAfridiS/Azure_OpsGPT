@@ -653,17 +653,10 @@ Then inspect Notification Service logs.
 
 OpsGPT Phase 1 now uses Microsoft Foundry / Azure AI Foundry only for AI Analysis. Configure `AI_PROVIDER=foundry`, `FOUNDRY_ENDPOINT`, `FOUNDRY_API_KEY`, and `FOUNDRY_MODEL_DEPLOYMENT` before starting the full pipeline.
 
-Project webhooks remain event-driven:
-
-```text
-http://<VM_IP>:8002/alerts/webhook/project/{project_id}/{webhook_token}
-```
-
-If you expose the application through your own reverse proxy on port `8080`, route the same path to Alert Ingestion:
+Project webhooks remain event-driven. With the included Nginx reverse proxy, use:
 
 ```text
 http://<VM_IP>:8080/alerts/webhook/project/{project_id}/{webhook_token}
 ```
 
 OpsGPT does not scrape monitoring dashboards. Grafana, Azure Monitor, Datadog, Prometheus Alertmanager, and other tools should send triggered alert webhook payloads.
-

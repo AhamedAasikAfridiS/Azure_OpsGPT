@@ -1,16 +1,14 @@
 export function isActiveNavItem(key, pathname) {
-  const path =
-    pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
+  const path = pathname.replace(/\/+$/, "") || "/";
 
   const matchers = {
     projects: /^\/projects$/,
-    dashboard: /^(\/dashboard|\/projects\/[^/]+\/dashboard)$/,
-    incidents:
-      /^(\/incidents(?:\/[^/]+)?|\/projects\/[^/]+\/incidents(?:\/[^/]+)?)$/,
+    dashboard: /^\/projects\/[^/]+\/dashboard$/,
+    incidents: /^\/projects\/[^/]+\/incidents(?:\/[^/]+)?$/,
     knowledgeBase: /^\/knowledge-base$/,
     profile: /^\/profile$/,
     adminProjects: /^\/admin\/projects(?:\/[^/]+\/sources)?$/,
   };
 
-  return matchers[key]?.test(path) || false;
+  return Boolean(matchers[key]?.test(path));
 }

@@ -1,6 +1,18 @@
 # Local Development
 
-Phase 1 is designed for local Docker Compose development. It does not include Azure deployment infrastructure, Kubernetes, or Nginx.
+Phase 1 is designed for local Docker Compose development. It does not include Azure deployment infrastructure or Kubernetes.
+
+Nginx is the recommended local/VM entry point:
+
+```text
+http://<VM_IP>:8080
+```
+
+Frontend API calls should use:
+
+```env
+VITE_CORE_API_URL=/api/core
+```
 
 ## Environment Files
 
@@ -23,7 +35,7 @@ FOUNDRY_API_VERSION=2024-02-15-preview
 Use project-specific webhooks for realistic testing:
 
 ```text
-http://<host>:8002/alerts/webhook/project/{project_id}/{webhook_token}
+http://<VM_IP>:8080/alerts/webhook/project/{project_id}/{webhook_token}
 ```
 
 If you place your own reverse proxy in front of Docker, route that path to `alert-ingestion-service:8002`. No reverse proxy config is included in this repo.

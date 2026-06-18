@@ -8,6 +8,14 @@
 | ai-analysis-service | Detects duplicates, correlates alerts, calls Microsoft Foundry, creates/updates incidents through Core API internal APIs | Does not parse vendor webhook payloads or write Core DB directly |
 | notification-service | Receives notification events and sends console/Slack messages | Does not analyze incidents or update incident status |
 
+Nginx is used as the local/VM reverse proxy and routing layer. It is not an application microservice.
+
+```text
+http://<VM_IP>:8080
+```
+
+Nginx routes frontend traffic to `frontend-service:3000`, API traffic under `/api/*`, and project webhooks under `/alerts/webhook/`.
+
 ## Supported Monitoring Sources
 
 Grafana, Azure Monitor, Prometheus Alertmanager, Datadog, New Relic, Splunk, Elastic / Kibana, Sentry, PagerDuty, AWS CloudWatch, Google Cloud Monitoring, Dynatrace, AppDynamics, Zabbix, Nagios, and Custom Webhook.

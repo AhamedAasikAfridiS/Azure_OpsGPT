@@ -1,117 +1,83 @@
-name: opsgpt-phase1
-
 services:
-  core-db:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_DB: opsgpt_core_db
-      POSTGRES_USER: opsgpt_core
-      POSTGRES_PASSWORD: opsgpt_core_password
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: opsgpt-nginx
+    ports:
+      - "8080:80"
     volumes:
-      - core_db_data:/var/lib/postgresql/data
-    healthcheck:
-      test:
-        - CMD-SHELL
-        - pg_isready -U opsgpt_core -d opsgpt_core_db
-      interval: 5s
-      timeout: 5s
-      retries: 10
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - frontend-service
+      - core-api-service
+      - alert-ingestion-service
+      - ai-analysis-service
+      - notification-service
     networks:
       - opsgpt-network
-    restart: unless-stopped
 
-  alert-db:
-    image: postgres:16-alpine
+  frontend-service:
+    build:
+      context: ./frontend-service
+    container_name: opsgpt-frontend-service
     environment:
-      POSTGRES_DB: opsgpt_alerts_db
-      POSTGRES_USER: opsgpt_alerts
-      POSTGRES_PASSWORD: opsgpt_alerts_password
-    volumes:
-      - alert_db_data:/var/lib/postgresql/data
-    healthcheck:
-      test:
-        - CMD-SHELL
-        - pg_isready -U opsgpt_alerts -d opsgpt_alerts_db
-      interval: 5s
-      timeout: 5s
-      retries: 10
+      VITE_CORE_API_URL: ${VITE_CORE_API_URL:-/api/core}
+    ports:
+      - "3000:3000"
+    depends_on:
+      - core-api-service
     networks:
       - opsgpt-network
-    restart: unless-stopped
-
-  analysis-db:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_DB: opsgpt_analysis_db
-      POSTGRES_USER: opsgpt_analysis
-      POSTGRES_PASSWORD: opsgpt_analysis_password
-    volumes:
-      - analysis_db_data:/var/lib/postgresql/data
-    healthcheck:
-      test:
-        - CMD-SHELL
-        - pg_isready -U opsgpt_analysis -d opsgpt_analysis_db
-      interval: 5s
-      timeout: 5s
-      retries: 10
-    networks:
-      - opsgpt-network
-    restart: unless-stopped
-
-  notification-db:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_DB: opsgpt_notifications_db
-      POSTGRES_USER: opsgpt_notifications
-      POSTGRES_PASSWORD: opsgpt_notifications_password
-    volumes:
-      - notification_db_data:/var/lib/postgresql/data
-    healthcheck:
-      test:
-        - CMD-SHELL
-        - pg_isready -U opsgpt_notifications -d opsgpt_notifications_db
-      interval: 5s
-      timeout: 5s
-      retries: 10
-    networks:
-      - opsgpt-network
-    restart: unless-stopped
 
   core-api-service:
     build:
       context: ./core-api-service
+    container_name: opsgpt-core-api-service
     environment:
-      APP_ENV: development
-      APP_HOST: 0.0.0.0
-      APP_PORT: 8001
       DATABASE_URL: postgresql://opsgpt_core:opsgpt_core_password@core-db:5432/opsgpt_core_db
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:-change-me}
-      JWT_ALGORITHM: HS256
-      JWT_EXPIRE_MINUTES: 60
+      JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
+      JWT_EXPIRE_MINUTES: ${JWT_EXPIRE_MINUTES:-60}
       INTERNAL_API_KEY: ${INTERNAL_API_KEY:-change-me-internal-key}
       NOTIFICATION_SERVICE_URL: http://notification-service:8004
       ENABLE_NOTIFICATIONS: ${ENABLE_NOTIFICATIONS:-false}
-      CORS_ORIGINS: "*" # Phase 1 development/testing only
+      APP_ENV: ${APP_ENV:-development}
+      CORS_ORIGINS: ${CORS_ORIGINS:-*}
     ports:
       - "8001:8001"
     depends_on:
-      core-db:
-        condition: service_healthy
+      - core-db
     networks:
       - opsgpt-network
-    restart: unless-stopped
+
+  alert-ingestion-service:
+    build:
+      context: ./alert-ingestion-service
+    container_name: opsgpt-alert-ingestion-service
+    environment:
+      DATABASE_URL: postgresql://opsgpt_alerts:opsgpt_alerts_password@alert-db:5432/opsgpt_alerts_db
+      AI_ANALYSIS_SERVICE_URL: http://ai-analysis-service:8003
+      ENABLE_ANALYSIS_FORWARDING: ${ENABLE_ANALYSIS_FORWARDING:-false}
+      CORE_API_URL: http://core-api-service:8001
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:-change-me-internal-key}
+      APP_ENV: ${APP_ENV:-development}
+      CORS_ORIGINS: ${CORS_ORIGINS:-*}
+    ports:
+      - "8002:8002"
+    depends_on:
+      - alert-db
+      - ai-analysis-service
+    networks:
+      - opsgpt-network
 
   ai-analysis-service:
     build:
       context: ./ai-analysis-service
+    container_name: opsgpt-ai-analysis-service
     environment:
-      APP_ENV: development
-      APP_HOST: 0.0.0.0
-      APP_PORT: 8003
       DATABASE_URL: postgresql://opsgpt_analysis:opsgpt_analysis_password@analysis-db:5432/opsgpt_analysis_db
       CORE_API_URL: http://core-api-service:8001
       INTERNAL_API_KEY: ${INTERNAL_API_KEY:-change-me-internal-key}
-      CORRELATION_WINDOW_MINUTES: 10
+      CORRELATION_WINDOW_MINUTES: ${CORRELATION_WINDOW_MINUTES:-10}
       AI_PROVIDER: ${AI_PROVIDER:-foundry}
       FOUNDRY_ENDPOINT: ${FOUNDRY_ENDPOINT:-}
       FOUNDRY_API_KEY: ${FOUNDRY_API_KEY:-}
@@ -120,80 +86,82 @@ services:
       FOUNDRY_TIMEOUT_SECONDS: ${FOUNDRY_TIMEOUT_SECONDS:-60}
       FOUNDRY_MAX_RETRIES: ${FOUNDRY_MAX_RETRIES:-2}
       FOUNDRY_CHAT_COMPLETIONS_PATH: "/openai/deployments/{deployment}/chat/completions?api-version={api_version}"
-      CORS_ORIGINS: "*" # Phase 1 development/testing only
+      APP_ENV: ${APP_ENV:-development}
+      CORS_ORIGINS: ${CORS_ORIGINS:-*}
     ports:
       - "8003:8003"
     depends_on:
-      analysis-db:
-        condition: service_healthy
-      core-api-service:
-        condition: service_started
+      - analysis-db
+      - core-api-service
     networks:
       - opsgpt-network
-    restart: unless-stopped
-
-  alert-ingestion-service:
-    build:
-      context: ./alert-ingestion-service
-    environment:
-      APP_ENV: development
-      APP_HOST: 0.0.0.0
-      APP_PORT: 8002
-      DATABASE_URL: postgresql://opsgpt_alerts:opsgpt_alerts_password@alert-db:5432/opsgpt_alerts_db
-      AI_ANALYSIS_SERVICE_URL: http://ai-analysis-service:8003
-      CORE_API_URL: http://core-api-service:8001
-      INTERNAL_API_KEY: ${INTERNAL_API_KEY:-change-me-internal-key}
-      ENABLE_ANALYSIS_FORWARDING: ${ENABLE_ANALYSIS_FORWARDING:-false}
-      CORS_ORIGINS: "*" # Phase 1 development/testing only
-    ports:
-      - "8002:8002"
-    depends_on:
-      alert-db:
-        condition: service_healthy
-      ai-analysis-service:
-        condition: service_started
-      core-api-service:
-        condition: service_started
-    networks:
-      - opsgpt-network
-    restart: unless-stopped
 
   notification-service:
     build:
       context: ./notification-service
+    container_name: opsgpt-notification-service
     environment:
-      APP_ENV: development
-      APP_HOST: 0.0.0.0
-      APP_PORT: 8004
       DATABASE_URL: postgresql://opsgpt_notifications:opsgpt_notifications_password@notification-db:5432/opsgpt_notifications_db
       NOTIFICATION_CHANNEL: ${NOTIFICATION_CHANNEL:-console}
       SLACK_WEBHOOK_URL: ${SLACK_WEBHOOK_URL:-}
-      NOTIFICATION_RETRY_COUNT: 3
-      NOTIFICATION_TIMEOUT_SECONDS: 10
-      CORS_ORIGINS: "*" # Phase 1 development/testing only
+      NOTIFICATION_RETRY_COUNT: ${NOTIFICATION_RETRY_COUNT:-3}
+      NOTIFICATION_TIMEOUT_SECONDS: ${NOTIFICATION_TIMEOUT_SECONDS:-10}
+      APP_ENV: ${APP_ENV:-development}
+      CORS_ORIGINS: ${CORS_ORIGINS:-*}
     ports:
       - "8004:8004"
     depends_on:
-      notification-db:
-        condition: service_healthy
+      - notification-db
     networks:
       - opsgpt-network
-    restart: unless-stopped
 
-  frontend-service:
-    build:
-      context: ./frontend-service
+  core-db:
+    image: postgres:16-alpine
+    container_name: opsgpt-core-db
     environment:
-      VITE_CORE_API_URL: http://localhost:8001
-      VITE_ALERT_INGESTION_URL: http://localhost:8002
-    ports:
-      - "80:3000"
-    depends_on:
-      core-api-service:
-        condition: service_started
+      POSTGRES_DB: opsgpt_core_db
+      POSTGRES_USER: opsgpt_core
+      POSTGRES_PASSWORD: opsgpt_core_password
+    volumes:
+      - core_db_data:/var/lib/postgresql/data
     networks:
       - opsgpt-network
-    restart: unless-stopped
+
+  alert-db:
+    image: postgres:16-alpine
+    container_name: opsgpt-alert-db
+    environment:
+      POSTGRES_DB: opsgpt_alerts_db
+      POSTGRES_USER: opsgpt_alerts
+      POSTGRES_PASSWORD: opsgpt_alerts_password
+    volumes:
+      - alert_db_data:/var/lib/postgresql/data
+    networks:
+      - opsgpt-network
+
+  analysis-db:
+    image: postgres:16-alpine
+    container_name: opsgpt-analysis-db
+    environment:
+      POSTGRES_DB: opsgpt_analysis_db
+      POSTGRES_USER: opsgpt_analysis
+      POSTGRES_PASSWORD: opsgpt_analysis_password
+    volumes:
+      - analysis_db_data:/var/lib/postgresql/data
+    networks:
+      - opsgpt-network
+
+  notification-db:
+    image: postgres:16-alpine
+    container_name: opsgpt-notification-db
+    environment:
+      POSTGRES_DB: opsgpt_notifications_db
+      POSTGRES_USER: opsgpt_notifications
+      POSTGRES_PASSWORD: opsgpt_notifications_password
+    volumes:
+      - notification_db_data:/var/lib/postgresql/data
+    networks:
+      - opsgpt-network
 
 volumes:
   core_db_data:

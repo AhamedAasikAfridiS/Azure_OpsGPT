@@ -21,13 +21,13 @@ OpsGPT remains webhook-driven. Admins create a project, add a monitoring source,
 http://<host>:8002/alerts/webhook/project/{project_id}/{webhook_token}
 ```
 
-If an external reverse proxy exposes the app on port `8080`, route this same path to Alert Ingestion:
+With the included Nginx reverse proxy on port `8080`, use:
 
 ```text
 http://<VM_IP>:8080/alerts/webhook/project/{project_id}/{webhook_token}
 ```
 
-No Nginx configuration is included in this repository.
+The Nginx configuration is in `nginx/nginx.conf`.
 
 Supported webhook sources include Grafana, Azure Monitor, Prometheus Alertmanager, Datadog, New Relic, Splunk, Elastic / Kibana, Sentry, PagerDuty, AWS CloudWatch, Google Cloud Monitoring, Dynatrace, AppDynamics, Zabbix, Nagios, and Custom Webhook.
 
