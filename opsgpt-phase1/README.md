@@ -43,6 +43,14 @@ DATABASE_URL=postgresql://opsgpt_user:opsgpt_password@opsgpt-db:5432/opsgpt_db
 
 The microservices remain separate at the application/service level. Future production phases can split the databases per service if needed.
 
+The Core API container runs a database bootstrap before Uvicorn starts:
+
+```text
+python -m app.db.bootstrap
+```
+
+That bootstrap creates the Core API tables and enforces the default local users. If an existing Docker volume has stale default-user hashes, rebuilding the Core API image repairs them without deleting the volume.
+
 ## Project Webhook Flow
 
 1. Admin logs in.
@@ -110,6 +118,13 @@ Do this manually when you are ready to run the application:
 
 ```bash
 docker compose up --build
+```
+
+After pulling changes that affect Core API startup or seeding, rebuild the Core API image:
+
+```bash
+docker compose build --no-cache core-api-service
+docker compose up
 ```
 
 Then open:

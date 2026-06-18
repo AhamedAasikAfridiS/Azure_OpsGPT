@@ -7,6 +7,11 @@ services:
       POSTGRES_PASSWORD: opsgpt_password
     volumes:
       - opsgpt_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U opsgpt_user -d opsgpt_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
     networks:
       - opsgpt-network
 
@@ -24,8 +29,10 @@ services:
       APP_ENV: development
       CORS_ORIGINS: "*"
     depends_on:
-      - opsgpt-db
-      - notification-service
+      opsgpt-db:
+        condition: service_healthy
+      notification-service:
+        condition: service_started
     ports:
       - "8001:8001"
     networks:
@@ -43,9 +50,12 @@ services:
       APP_ENV: development
       CORS_ORIGINS: "*"
     depends_on:
-      - opsgpt-db
-      - core-api-service
-      - ai-analysis-service
+      opsgpt-db:
+        condition: service_healthy
+      core-api-service:
+        condition: service_started
+      ai-analysis-service:
+        condition: service_started
     ports:
       - "8002:8002"
     networks:
@@ -69,8 +79,10 @@ services:
       APP_ENV: development
       CORS_ORIGINS: "*"
     depends_on:
-      - opsgpt-db
-      - core-api-service
+      opsgpt-db:
+        condition: service_healthy
+      core-api-service:
+        condition: service_started
     ports:
       - "8003:8003"
     networks:
@@ -88,7 +100,8 @@ services:
       APP_ENV: development
       CORS_ORIGINS: "*"
     depends_on:
-      - opsgpt-db
+      opsgpt-db:
+        condition: service_healthy
     ports:
       - "8004:8004"
     networks:

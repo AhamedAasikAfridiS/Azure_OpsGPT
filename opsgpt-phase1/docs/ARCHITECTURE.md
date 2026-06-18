@@ -46,6 +46,8 @@ postgresql://opsgpt_user:opsgpt_password@opsgpt-db:5432/opsgpt_db
 
 This is a Phase 1 development decision. The microservices remain separate at the application and service level. Future production phases can split databases per service if needed.
 
+The Core API container runs a pre-start bootstrap that creates Core API tables and enforces the default local users. This keeps first startup and stale development volumes recoverable without introducing a separate migration service.
+
 ## Project Webhook
 
 Admins create a project and then create a Prometheus Alertmanager monitoring source. Core API generates:

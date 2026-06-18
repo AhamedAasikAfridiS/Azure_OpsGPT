@@ -175,6 +175,8 @@ Use a professional teal / teal-blue / white / dark slate theme.
 
 All backend services must expose `GET /health`, use CORS with `allow_origins=["*"]` and `allow_credentials=False`, handle database sessions safely, log controlled errors, and avoid exposing secrets in logs.
 
+Core API must bootstrap the database inside the Docker container before Uvicorn starts. The bootstrap creates Core API tables and enforces the three default local users so existing Phase 1 Docker volumes with stale credentials are repaired on rebuild.
+
 Alert Ingestion must not crash on unexpected Alertmanager payloads, missing optional labels, or AI Analysis unavailability. Missing or empty `alerts[]` should return a controlled 422 response.
 
 AI Analysis must not crash on missing Foundry config, AI failure, Core API unavailability, or null optional fields. If AI fails after correlation succeeds, create the incident when possible and mark analysis failed without fake AI output.
@@ -199,3 +201,4 @@ Notification Service must not crash if Slack URL is missing while console mode i
 ## Last Updated
 
 - 2026-06-18: Initial Phase 1 context created from the pasted requirements, including the shared PostgreSQL database override.
+- 2026-06-19: Confirmed Docker remains the target runtime; added Core API container database bootstrap requirement for table creation and default user seeding.

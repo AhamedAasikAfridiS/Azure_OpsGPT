@@ -10,6 +10,21 @@ From the `opsgpt-phase1` directory, manually run:
 docker compose up --build
 ```
 
+If login fails with the seeded credentials after code changes, rebuild Core API so the container picks up the latest database bootstrap:
+
+```bash
+docker compose build --no-cache core-api-service
+docker compose up
+```
+
+The Core API container runs this before starting the API server:
+
+```text
+python -m app.db.bootstrap
+```
+
+It creates tables and resets these default local users to the documented passwords without requiring a volume reset.
+
 Open:
 
 ```text
