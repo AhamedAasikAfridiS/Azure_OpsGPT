@@ -5,8 +5,8 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 from app.schemas.alert_schema import (
-    AlertEnvironment,
-    AlertSeverity,
+    Environment,
+    Severity,
     AlertType,
 )
 
@@ -14,10 +14,10 @@ from app.schemas.alert_schema import (
 class ManualAlertRequest(BaseModel):
     service_name: str = Field(min_length=1, max_length=160)
     alert_type: AlertType
-    severity: AlertSeverity
+    severity: Severity
     message: str = Field(min_length=1)
     description: str | None = None
-    environment: AlertEnvironment = AlertEnvironment.production
+    environment: Environment = Environment.production
     metric_name: str | None = Field(default=None, max_length=255)
     metric_value: Any | None = None
     threshold: float | str | None = None

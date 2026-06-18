@@ -15,7 +15,7 @@ from app.schemas.alert_schema import (
     NormalizedAlertResponse,
     RawAlertResponse,
 )
-from app.services.alert_forwarder_service import forward_to_analysis
+from app.services.alert_forwarder_service import forward_alert_to_analysis
 from app.services.alert_normalization_service import (
     get_candidate_alert_id,
     normalize_alert,
@@ -121,7 +121,7 @@ def _ingest_alert(
         message="Alert normalized and stored",
     )
 
-    forwarding_result = forward_to_analysis(stored_alert)
+    forwarding_result = forward_alert_to_analysis(stored_alert)
     if not forwarding_result.attempted:
         return stored_alert
 

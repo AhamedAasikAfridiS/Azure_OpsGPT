@@ -7,7 +7,7 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.schemas.alert_schema import (
-    AlertSeverity,
+    Severity,
     NormalizedAlertInput,
     StoredAnalysisAlertResponse,
 )
@@ -36,7 +36,7 @@ class AIAnalysisOutput(BaseModel):
 
 class SummaryRequest(BaseModel):
     service_name: str = Field(min_length=1)
-    severity: AlertSeverity
+    severity: Severity
     alerts: list[NormalizedAlertInput] = Field(min_length=1)
 
 
@@ -58,7 +58,7 @@ class RCAResponse(BaseModel):
 class FixRequest(BaseModel):
     root_cause: str = Field(min_length=1)
     service_name: str = Field(min_length=1)
-    severity: AlertSeverity
+    severity: Severity
 
 
 class FixResponse(BaseModel):
