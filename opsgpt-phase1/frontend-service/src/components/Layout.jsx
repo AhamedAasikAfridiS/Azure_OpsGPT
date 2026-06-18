@@ -66,13 +66,16 @@ export default function Layout() {
 
       <div className="workspace">
         <header className="topbar">
-          <div>
+          <div className="project-context">
             <span className="eyebrow">Selected project</span>
-            <strong>{selectedProjectId || "None"}</strong>
+            <strong>{selectedProjectId || "None selected"}</strong>
           </div>
           <NavLink to="/profile" className="profile-chip">
             <User size={18} />
-            <span>{user?.name}</span>
+            <span>
+              <strong>{user?.name}</strong>
+              <small>{user?.role}</small>
+            </span>
           </NavLink>
         </header>
         <main className="content">
