@@ -1,0 +1,42 @@
+{
+  "receiver": "opsgpt-webhook",
+  "status": "firing",
+  "alerts": [
+    {
+      "status": "firing",
+      "labels": {
+        "alertname": "HighCPUUsage",
+        "severity": "critical",
+        "service": "payment-api",
+        "namespace": "production",
+        "pod": "payment-api-abc123",
+        "cluster": "aks-prod",
+        "environment": "production"
+      },
+      "annotations": {
+        "summary": "High CPU usage detected",
+        "description": "CPU usage is above 90% for payment-api"
+      },
+      "startsAt": "2026-06-18T10:00:00Z",
+      "endsAt": "0001-01-01T00:00:00Z",
+      "generatorURL": "http://prometheus.example/graph?g0.expr=cpu",
+      "fingerprint": "cpu-critical-abc123"
+    }
+  ],
+  "groupLabels": {
+    "alertname": "HighCPUUsage",
+    "service": "payment-api"
+  },
+  "commonLabels": {
+    "severity": "critical",
+    "service": "payment-api",
+    "namespace": "production"
+  },
+  "commonAnnotations": {
+    "summary": "High CPU usage detected"
+  },
+  "externalURL": "http://alertmanager.example",
+  "version": "4",
+  "groupKey": "{}:{alertname=\"HighCPUUsage\"}",
+  "truncatedAlerts": 0
+}

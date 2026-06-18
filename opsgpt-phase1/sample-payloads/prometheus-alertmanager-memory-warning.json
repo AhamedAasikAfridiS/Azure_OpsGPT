@@ -1,0 +1,42 @@
+{
+  "receiver": "opsgpt-webhook",
+  "status": "firing",
+  "alerts": [
+    {
+      "status": "firing",
+      "labels": {
+        "alertname": "MemoryPressure",
+        "severity": "warning",
+        "service": "checkout-api",
+        "namespace": "staging",
+        "pod": "checkout-api-77df",
+        "cluster": "aks-staging",
+        "environment": "staging"
+      },
+      "annotations": {
+        "summary": "Memory pressure detected",
+        "description": "Container memory usage is above 80% for checkout-api"
+      },
+      "startsAt": "2026-06-18T10:05:00Z",
+      "endsAt": "0001-01-01T00:00:00Z",
+      "generatorURL": "http://prometheus.example/graph?g0.expr=memory",
+      "fingerprint": "memory-warning-def456"
+    }
+  ],
+  "groupLabels": {
+    "alertname": "MemoryPressure",
+    "service": "checkout-api"
+  },
+  "commonLabels": {
+    "severity": "warning",
+    "service": "checkout-api",
+    "namespace": "staging"
+  },
+  "commonAnnotations": {
+    "summary": "Memory pressure detected"
+  },
+  "externalURL": "http://alertmanager.example",
+  "version": "4",
+  "groupKey": "{}:{alertname=\"MemoryPressure\"}",
+  "truncatedAlerts": 0
+}

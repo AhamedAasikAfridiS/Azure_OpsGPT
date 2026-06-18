@@ -1,0 +1,43 @@
+{
+  "receiver": "opsgpt-webhook",
+  "status": "firing",
+  "alerts": [
+    {
+      "status": "firing",
+      "labels": {
+        "alertname": "KubePodCrashLooping",
+        "severity": "critical",
+        "service": "orders-worker",
+        "namespace": "production",
+        "pod": "orders-worker-5fd88",
+        "deployment": "orders-worker",
+        "cluster": "aks-prod",
+        "environment": "production"
+      },
+      "annotations": {
+        "summary": "Pod is crash looping",
+        "description": "orders-worker pod has restarted repeatedly in the last 10 minutes"
+      },
+      "startsAt": "2026-06-18T10:10:00Z",
+      "endsAt": "0001-01-01T00:00:00Z",
+      "generatorURL": "http://prometheus.example/graph?g0.expr=crashloop",
+      "fingerprint": "k8s-crashloop-ghi789"
+    }
+  ],
+  "groupLabels": {
+    "alertname": "KubePodCrashLooping",
+    "service": "orders-worker"
+  },
+  "commonLabels": {
+    "severity": "critical",
+    "service": "orders-worker",
+    "namespace": "production"
+  },
+  "commonAnnotations": {
+    "summary": "Pod is crash looping"
+  },
+  "externalURL": "http://alertmanager.example",
+  "version": "4",
+  "groupKey": "{}:{alertname=\"KubePodCrashLooping\"}",
+  "truncatedAlerts": 0
+}

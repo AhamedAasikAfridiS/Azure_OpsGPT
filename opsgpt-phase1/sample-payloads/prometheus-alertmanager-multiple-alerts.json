@@ -1,0 +1,61 @@
+{
+  "receiver": "opsgpt-webhook",
+  "status": "firing",
+  "alerts": [
+    {
+      "status": "firing",
+      "labels": {
+        "alertname": "HighAPILatency",
+        "severity": "warning",
+        "service": "catalog-api",
+        "namespace": "production",
+        "instance": "catalog-api-1",
+        "cluster": "aks-prod",
+        "environment": "production"
+      },
+      "annotations": {
+        "summary": "API latency is elevated",
+        "description": "p95 latency is above 1.5 seconds"
+      },
+      "startsAt": "2026-06-18T10:15:00Z",
+      "endsAt": "0001-01-01T00:00:00Z",
+      "generatorURL": "http://prometheus.example/graph?g0.expr=latency",
+      "fingerprint": "latency-jkl012"
+    },
+    {
+      "status": "firing",
+      "labels": {
+        "alertname": "HTTPErrorRateHigh",
+        "severity": "warning",
+        "service": "catalog-api",
+        "namespace": "production",
+        "instance": "catalog-api-2",
+        "cluster": "aks-prod",
+        "environment": "production"
+      },
+      "annotations": {
+        "summary": "HTTP 500 error rate is elevated",
+        "description": "5xx responses exceeded the warning threshold"
+      },
+      "startsAt": "2026-06-18T10:16:00Z",
+      "endsAt": "0001-01-01T00:00:00Z",
+      "generatorURL": "http://prometheus.example/graph?g0.expr=errors",
+      "fingerprint": "errorrate-mno345"
+    }
+  ],
+  "groupLabels": {
+    "service": "catalog-api"
+  },
+  "commonLabels": {
+    "severity": "warning",
+    "service": "catalog-api",
+    "namespace": "production"
+  },
+  "commonAnnotations": {
+    "summary": "Catalog API alerts firing"
+  },
+  "externalURL": "http://alertmanager.example",
+  "version": "4",
+  "groupKey": "{}:{service=\"catalog-api\"}",
+  "truncatedAlerts": 0
+}

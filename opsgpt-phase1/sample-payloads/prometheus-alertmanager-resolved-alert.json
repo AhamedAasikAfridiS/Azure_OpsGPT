@@ -1,0 +1,42 @@
+{
+  "receiver": "opsgpt-webhook",
+  "status": "resolved",
+  "alerts": [
+    {
+      "status": "resolved",
+      "labels": {
+        "alertname": "ServiceDown",
+        "severity": "resolved",
+        "service": "inventory-api",
+        "namespace": "production",
+        "job": "inventory-api",
+        "cluster": "aks-prod",
+        "environment": "production"
+      },
+      "annotations": {
+        "summary": "ServiceDown alert resolved",
+        "description": "inventory-api is healthy again"
+      },
+      "startsAt": "2026-06-18T09:50:00Z",
+      "endsAt": "2026-06-18T10:20:00Z",
+      "generatorURL": "http://prometheus.example/graph?g0.expr=up",
+      "fingerprint": "resolved-pqr678"
+    }
+  ],
+  "groupLabels": {
+    "alertname": "ServiceDown",
+    "service": "inventory-api"
+  },
+  "commonLabels": {
+    "severity": "resolved",
+    "service": "inventory-api",
+    "namespace": "production"
+  },
+  "commonAnnotations": {
+    "summary": "ServiceDown alert resolved"
+  },
+  "externalURL": "http://alertmanager.example",
+  "version": "4",
+  "groupKey": "{}:{alertname=\"ServiceDown\"}",
+  "truncatedAlerts": 0
+}
