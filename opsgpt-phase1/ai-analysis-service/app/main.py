@@ -3,7 +3,6 @@ import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.ai_clients.foundry_ai_client import foundry_configured
 from app.api.routes import analysis
 from app.core.config import settings
 from app.db.database import init_db
@@ -35,6 +34,4 @@ def health() -> dict:
     return {
         "status": "ok",
         "service": "ai-analysis-service",
-        "ai_provider": settings.ai_provider,
-        "foundry_configured": foundry_configured(),
     }

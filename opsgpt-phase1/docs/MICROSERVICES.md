@@ -61,11 +61,11 @@ Responsibilities:
 - Detect duplicates
 - Correlate alerts by project, service, namespace, cluster, environment, and a 10-minute window
 - Create incidents through Core API
-- Call Microsoft Foundry / Azure AI Foundry when configured
+- Call Azure AI Foundry only when configured, using the Responses API by default and Chat Completions as a compatibility mode
 - Store analysis results
 - Update Core API with AI summary, RCA, evidence, confidence, and recommendations
 
-AI Analysis does not parse raw Alertmanager payloads, manage users/RBAC, send Slack directly, or write directly to Core API tables.
+AI Analysis does not parse raw Alertmanager payloads, manage users/RBAC, send Slack directly, or write directly to Core API tables. Missing Foundry configuration, request failures, or invalid model JSON record a failed analysis without preventing correlated incident creation. No other cloud integration is implemented in Phase 1.
 
 ## notification-service
 

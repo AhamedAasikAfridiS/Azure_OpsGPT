@@ -85,18 +85,23 @@ Use files in `sample-payloads/` for manual webhook testing. Only Prometheus Aler
 - `prometheus-alertmanager-multiple-alerts.json`
 - `prometheus-alertmanager-resolved-alert.json`
 
-## Foundry AI
+## Azure AI Foundry
 
-The app starts even if Foundry variables are blank. To enable AI analysis, set these values for `ai-analysis-service`:
+The app starts even if Azure AI Foundry variables are blank. To enable AI analysis, obtain the endpoint and API key from Azure AI Foundry or the Azure resource's **Keys and Endpoint** page, and use the model deployment name configured in Foundry. Set these values for `ai-analysis-service`:
 
 ```text
-FOUNDRY_ENDPOINT=
-FOUNDRY_API_KEY=
-FOUNDRY_MODEL_DEPLOYMENT=
-FOUNDRY_API_VERSION=2024-02-15-preview
+AI_PROVIDER=azure_foundry
+AZURE_FOUNDRY_API_MODE=responses
+AZURE_FOUNDRY_ENDPOINT=
+AZURE_FOUNDRY_API_KEY=
+AZURE_FOUNDRY_MODEL=
+AZURE_FOUNDRY_API_VERSION=2025-04-01-preview
+AZURE_FOUNDRY_TIMEOUT_SECONDS=60
+AZURE_FOUNDRY_MAX_RETRIES=2
+AZURE_FOUNDRY_TEMPERATURE=0.2
 ```
 
-If AI fails, incidents are still created after correlation. The frontend shows a friendly empty state for AI fields.
+Only `ai-analysis-service` calls Foundry. The default `responses` mode uses `/openai/v1/responses`; `chat_completions` is available for compatible deployments. `/health` does not test Azure AI Foundry connectivity. If configuration is missing or analysis fails, incidents are still created after correlation and the service records `analysis_status=failed` with a clear error. No other cloud integration is implemented in Phase 1.
 
 ## Database
 

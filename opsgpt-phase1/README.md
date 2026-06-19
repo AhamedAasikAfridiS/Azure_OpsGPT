@@ -619,7 +619,7 @@ Future production architecture can split databases per service if stronger isola
 
 ## 20. Microsoft Foundry / Azure AI Foundry Workflow
 
-Microsoft Foundry / Azure AI Foundry is the AI direction for incident analysis.
+Microsoft Foundry / Azure AI Foundry is the first cloud integration for incident analysis and is used only by `ai-analysis-service`.
 
 Expected AI workflow:
 
@@ -633,7 +633,7 @@ Expected AI workflow:
 If AI is not configured or the AI call fails:
 
 - Incident creation should still succeed.
-- AI fields may be empty or failed.
+- AI Analysis records `analysis_status=failed` and a controlled error message; AI fields remain empty.
 - The frontend should clearly show that AI analysis is not available yet.
 
 AI should assist responders, not replace human judgment. Senior/admin users remain responsible for final resolution decisions.
@@ -833,19 +833,21 @@ Phase 1 uses local JWT authentication with bearer tokens.
 
 ## Microsoft Foundry Configuration
 
-AI Analysis uses Foundry only when configured:
+AI Analysis uses Azure AI Foundry only when configured. Copy the endpoint, API key, and deployed model name from Azure AI Foundry or the Azure resource's **Keys and Endpoint** page. These values are supplied to `ai-analysis-service`; no other OpsGPT service calls Foundry directly.
 
 ```text
-AI_PROVIDER=foundry
-FOUNDRY_ENDPOINT=
-FOUNDRY_API_KEY=
-FOUNDRY_MODEL_DEPLOYMENT=
-FOUNDRY_API_VERSION=2024-02-15-preview
-FOUNDRY_TIMEOUT_SECONDS=60
-FOUNDRY_MAX_RETRIES=2
+AI_PROVIDER=azure_foundry
+AZURE_FOUNDRY_API_MODE=responses
+AZURE_FOUNDRY_ENDPOINT=
+AZURE_FOUNDRY_API_KEY=
+AZURE_FOUNDRY_MODEL=
+AZURE_FOUNDRY_API_VERSION=2025-04-01-preview
+AZURE_FOUNDRY_TIMEOUT_SECONDS=60
+AZURE_FOUNDRY_MAX_RETRIES=2
+AZURE_FOUNDRY_TEMPERATURE=0.2
 ```
 
-If Foundry config is missing or the AI response fails, AI Analysis does not fake output. It still creates the incident when correlation succeeds and records analysis failure with a clear error.
+Responses API is the default mode. `chat_completions` remains available for compatible deployments. `/health` reports only service health and never tests Foundry connectivity. If Foundry configuration is missing or the AI response fails, AI Analysis does not fake output: it still creates the incident when correlation succeeds and records analysis failure with a clear error. Azure Service Bus, Azure deployment infrastructure, and other cloud integrations are not implemented in Phase 1.
 
 ## Manual Local Run
 

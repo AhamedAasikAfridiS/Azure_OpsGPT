@@ -76,6 +76,9 @@ Containerization and routing:
 AI:
 
 - Microsoft Foundry / Azure AI Foundry direction
+- First cloud integration: Azure AI Foundry is used only by `ai-analysis-service` through an environment-configured endpoint, API key, and model deployment.
+- Azure AI Foundry configuration is validated only when an AI analysis call is attempted; missing configuration or request failure must not stop correlated incident creation and must record a failed analysis.
+- No other cloud service is integrated in Phase 1.
 - No mock AI output
 - No fake RCA or fix generation
 - If AI config is missing or AI call fails, fail gracefully without crashing the pipeline
@@ -202,3 +205,4 @@ Notification Service must not crash if Slack URL is missing while console mode i
 
 - 2026-06-18: Initial Phase 1 context created from the pasted requirements, including the shared PostgreSQL database override.
 - 2026-06-19: Confirmed Docker remains the target runtime; added Core API container database bootstrap requirement for table creation and default user seeding.
+- 2026-06-20: Confirmed Azure AI Foundry as the first cloud integration for AI Analysis, with a failure-tolerant, environment-configured model call.

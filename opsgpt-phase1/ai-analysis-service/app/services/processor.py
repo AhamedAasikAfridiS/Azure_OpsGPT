@@ -5,10 +5,10 @@ from typing import Any
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
-from app.ai_clients.foundry_ai_client import FoundryAIClient
 from app.core.config import settings
 from app.models.models import AnalysisAlert, AnalysisLog, AnalysisResult, CorrelationGroup
 from app.schemas.schemas import NormalizedAlertInput
+from app.services.ai_analysis_service import AIAnalysisService
 from app.services.core_client import create_core_incident, update_core_incident_analysis
 
 
@@ -132,9 +132,12 @@ def alert_context(alerts: list[AnalysisAlert]) -> list[dict[str, Any]]:
         {
             "alert_id": alert.alert_id,
             "project_id": alert.project_id,
+            "alert_type": alert.alert_type,
+            "source_type": alert.source_type,
             "alert_name": alert.alert_name,
             "severity": alert.severity,
             "service_name": alert.service_name,
+            "environment": alert.environment,
             "namespace": alert.namespace,
             "cluster": alert.cluster,
             "pod": alert.pod,
@@ -143,6 +146,8 @@ def alert_context(alerts: list[AnalysisAlert]) -> list[dict[str, Any]]:
             "job": alert.job,
             "message": alert.message,
             "description": alert.description,
+            "status": alert.status,
+            "starts_at": alert.starts_at,
             "labels": alert.labels,
             "annotations": alert.annotations,
             "generator_url": alert.generator_url,
@@ -181,9 +186,11 @@ async def create_incident_and_run_analysis(db: Session, group: CorrelationGroup,
     db.flush()
 
     related_alerts = db.query(AnalysisAlert).filter(AnalysisAlert.alert_id.in_(group.related_alert_ids)).all()
-    client = FoundryAIClient()
+    ai_analysis_service = AIAnalysisService()
     try:
-        ai_output = await client.analyze_incident(alert_context(related_alerts or [trigger_alert]))
+        ai_output = await ai_analysis_service.analyze_alerts(
+            alert_context(related_alerts or [trigger_alert])
+        )
     except Exception as exc:
         db.add(
             AnalysisResult(

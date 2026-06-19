@@ -132,7 +132,7 @@ Endpoints:
 - `POST /analysis/correlate`
 - `GET /analysis/incidents/{incident_id}`
 
-AI Analysis stores failure details when Foundry config is missing, AI calls fail, invalid JSON is returned, or Core API cannot be updated.
+Only `ai-analysis-service` calls Azure AI Foundry. It supports the Responses API by default and a Chat Completions compatibility mode. `GET /health` does not test Foundry connectivity. AI Analysis stores failure details when configuration is missing, AI calls fail, invalid JSON is returned, or Core API cannot be updated; correlation can still create the incident.
 
 ## Notification API
 
