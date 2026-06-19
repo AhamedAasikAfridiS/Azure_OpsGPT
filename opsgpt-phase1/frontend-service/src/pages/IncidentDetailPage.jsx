@@ -1,12 +1,14 @@
-import { ArrowLeft, Check, Send } from "lucide-react";
+import { Check, Send } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
 import api from "../api/client.js";
 import StatusBadge from "../components/StatusBadge.jsx";
+import BackButton from "../components/navigation/BackButton.jsx";
 import EmptyState from "../components/states/EmptyState.jsx";
 import ErrorState from "../components/states/ErrorState.jsx";
 import LoadingState from "../components/states/LoadingState.jsx";
+import PageHeader from "../components/ui/PageHeader.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useProject } from "../context/ProjectContext.jsx";
 
@@ -76,20 +78,23 @@ export default function IncidentDetailPage() {
 
   return (
     <section className="page-stack">
-      <div className="page-header">
-        <div>
-          <Link className="back-link" to={`/projects/${projectId}/incidents`}>
-            <ArrowLeft size={16} />
-            Back
-          </Link>
-          <h1>{incident.title}</h1>
-          <p>{incident.incident_id}</p>
-        </div>
-        <div className="badge-row">
-          <StatusBadge value={incident.severity} />
-          <StatusBadge value={incident.status} />
-        </div>
-      </div>
+      <BackButton to={`/projects/${projectId}/incidents`} />
+      <PageHeader
+        actions={
+          <div className="badge-row" aria-label="Incident state">
+            <StatusBadge value={incident.severity} />
+            <StatusBadge value={incident.status} />
+          </div>
+        }
+        breadcrumbs={[
+          { label: "Projects", to: "/projects" },
+          { label: projectId, to: `/projects/${projectId}/dashboard` },
+          { label: "Incidents", to: `/projects/${projectId}/incidents` },
+          { label: incident.incident_id }
+        ]}
+        description={incident.incident_id}
+        title={incident.title}
+      />
 
       {actionError && <ErrorState message={actionError} />}
 
@@ -108,8 +113,8 @@ export default function IncidentDetailPage() {
               <dd>{incident.project_id || "-"}</dd>
             </div>
             <div>
-              <dt>Source</dt>
-              <dd>{incident.source_type}</dd>
+              <dt>Status</dt>
+              <dd>{incident.status}</dd>
             </div>
             <div>
               <dt>Namespace</dt>
@@ -122,6 +127,30 @@ export default function IncidentDetailPage() {
             <div>
               <dt>Created</dt>
               <dd>{new Date(incident.created_at).toLocaleString()}</dd>
+            </div>
+          </dl>
+        </section>
+
+        <section className="section-block">
+          <div className="section-heading">
+            <h2>Prometheus Alert Details</h2>
+          </div>
+          <dl className="meta-grid wide">
+            <div>
+              <dt>Source</dt>
+              <dd>{incident.source_type}</dd>
+            </div>
+            <div>
+              <dt>Namespace</dt>
+              <dd>{incident.namespace || "-"}</dd>
+            </div>
+            <div>
+              <dt>Cluster</dt>
+              <dd>{incident.cluster || "-"}</dd>
+            </div>
+            <div>
+              <dt>Alert count</dt>
+              <dd>{incident.related_alert_ids?.length || 0}</dd>
             </div>
           </dl>
           <div className="related-alerts">
@@ -151,7 +180,7 @@ export default function IncidentDetailPage() {
                 <p>{incident.ai_summary || "AI analysis is not available for this incident yet."}</p>
               </article>
               <article>
-                <h3>RCA</h3>
+                <h3>Root Cause Analysis</h3>
                 <p>{incident.root_cause || "AI analysis is not available for this incident yet."}</p>
               </article>
               <article>

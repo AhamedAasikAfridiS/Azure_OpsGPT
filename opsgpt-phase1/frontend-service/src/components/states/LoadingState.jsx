@@ -1,8 +1,5 @@
+import LoadingSpinner from "../ui/LoadingSpinner.jsx";
+
 export default function LoadingState({ label = "Loading", fullPage = false }) {
-  return (
-    <div className={fullPage ? "state-page" : "state-box"}>
-      <div className="spinner" />
-      <span>{label}</span>
-    </div>
-  );
+  return <LoadingSpinner fullPage={fullPage} label={label} />;
 }

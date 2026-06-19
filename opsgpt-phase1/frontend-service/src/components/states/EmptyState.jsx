@@ -1,8 +1,5 @@
-export default function EmptyState({ title, detail }) {
-  return (
-    <div className="empty-state">
-      <h3>{title}</h3>
-      {detail && <p>{detail}</p>}
-    </div>
-  );
+import UiEmptyState from "../ui/EmptyState.jsx";
+
+export default function EmptyState({ action, title, detail }) {
+  return <UiEmptyState action={action} detail={detail} title={title} />;
 }

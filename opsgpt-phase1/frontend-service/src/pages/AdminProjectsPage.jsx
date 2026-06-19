@@ -6,6 +6,7 @@ import api from "../api/client.js";
 import EmptyState from "../components/states/EmptyState.jsx";
 import ErrorState from "../components/states/ErrorState.jsx";
 import LoadingState from "../components/states/LoadingState.jsx";
+import PageHeader from "../components/ui/PageHeader.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 
 export default function AdminProjectsPage() {
@@ -15,10 +16,6 @@ export default function AdminProjectsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
-
-  if (!isAdmin) {
-    return <Navigate to="/projects" replace />;
-  }
 
   async function loadProjects() {
     setLoading(true);
@@ -37,6 +34,10 @@ export default function AdminProjectsPage() {
     loadProjects();
   }, []);
 
+  if (!isAdmin) {
+    return <Navigate to="/projects" replace />;
+  }
+
   async function createProject(event) {
     event.preventDefault();
     setSaving(true);
@@ -54,16 +55,16 @@ export default function AdminProjectsPage() {
 
   return (
     <section className="page-stack">
-      <div className="page-header">
-        <div>
-          <h1>Admin Projects</h1>
-          <p>Project and monitoring source administration</p>
-        </div>
-        <button className="secondary-button" onClick={loadProjects} type="button">
-          <RefreshCw size={16} />
-          Refresh
-        </button>
-      </div>
+      <PageHeader
+        actions={
+          <button className="secondary-button" onClick={loadProjects} type="button">
+            <RefreshCw size={16} aria-hidden="true" />
+            Refresh
+          </button>
+        }
+        description="Project and monitoring source administration"
+        title="Admin Projects"
+      />
 
       {error && <ErrorState message={error} />}
 

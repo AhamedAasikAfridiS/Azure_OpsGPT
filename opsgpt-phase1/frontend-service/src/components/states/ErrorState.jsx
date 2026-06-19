@@ -1,3 +1,5 @@
+import ErrorMessage from "../ui/ErrorMessage.jsx";
+
 export default function ErrorState({ message }) {
-  return <div className="error-state">{message || "Something went wrong."}</div>;
+  return <ErrorMessage message={message} />;
 }

@@ -4,6 +4,7 @@ import api from "../api/client.js";
 import EmptyState from "../components/states/EmptyState.jsx";
 import ErrorState from "../components/states/ErrorState.jsx";
 import LoadingState from "../components/states/LoadingState.jsx";
+import PageHeader from "../components/ui/PageHeader.jsx";
 
 export default function KnowledgeBasePage() {
   const [items, setItems] = useState([]);
@@ -20,12 +21,7 @@ export default function KnowledgeBasePage() {
 
   return (
     <section className="page-stack">
-      <div className="page-header">
-        <div>
-          <h1>Knowledge Base</h1>
-          <p>Incident learnings</p>
-        </div>
-      </div>
+      <PageHeader description="Incident learnings" title="Knowledge Base" />
       {loading && <LoadingState />}
       {error && <ErrorState message={error} />}
       {!loading && !error && items.length === 0 && <EmptyState title="No knowledge base entries" />}

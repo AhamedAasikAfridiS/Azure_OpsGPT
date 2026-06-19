@@ -1,11 +1,13 @@
-import { ArrowLeft, Copy, Plus, Search, Trash2 } from "lucide-react";
+import { Copy, Plus, Search, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Link, Navigate, useParams } from "react-router-dom";
+import { Navigate, useParams } from "react-router-dom";
 
 import api from "../api/client.js";
+import BackButton from "../components/navigation/BackButton.jsx";
 import EmptyState from "../components/states/EmptyState.jsx";
 import ErrorState from "../components/states/ErrorState.jsx";
 import LoadingState from "../components/states/LoadingState.jsx";
+import PageHeader from "../components/ui/PageHeader.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 
 export default function AdminMonitoringSourcesPage() {
@@ -27,10 +29,6 @@ export default function AdminMonitoringSourcesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
-
-  if (!isAdmin) {
-    return <Navigate to="/projects" replace />;
-  }
 
   async function loadData() {
     setLoading(true);
@@ -54,6 +52,10 @@ export default function AdminMonitoringSourcesPage() {
   useEffect(() => {
     loadData();
   }, [projectId]);
+
+  if (!isAdmin) {
+    return <Navigate to="/projects" replace />;
+  }
 
   async function createSource(event) {
     event.preventDefault();
@@ -122,18 +124,21 @@ export default function AdminMonitoringSourcesPage() {
 
   if (loading) return <LoadingState />;
 
+  const receiverWebhookUrl = sources[0]
+    ? `${window.location.origin}${sources[0].webhook_path}`
+    : "http://<VM_IP>:8080/alerts/webhook/project/{project_id}/{webhook_token}";
+
   return (
     <section className="page-stack">
-      <div className="page-header">
-        <div>
-          <Link className="back-link" to="/admin/projects">
-            <ArrowLeft size={16} />
-            Back
-          </Link>
-          <h1>{project?.name || projectId}</h1>
-          <p>{projectId}</p>
-        </div>
-      </div>
+      <BackButton to="/admin/projects" />
+      <PageHeader
+        breadcrumbs={[
+          { label: "Admin", to: "/admin/projects" },
+          { label: project?.name || projectId }
+        ]}
+        description={projectId}
+        title={project?.name || "Project Configuration"}
+      />
 
       {error && <ErrorState message={error} />}
       {notice && <div className="notice-state">{notice}</div>}
@@ -214,6 +219,14 @@ export default function AdminMonitoringSourcesPage() {
             ))}
           </div>
         )}
+        <div className="receiver-example">
+          <h3>Alertmanager receiver example</h3>
+          <pre>{`receivers:
+  - name: opsgpt-webhook
+    webhook_configs:
+      - url: '${receiverWebhookUrl}'
+        send_resolved: true`}</pre>
+        </div>
       </section>
 
       <section className="section-block">

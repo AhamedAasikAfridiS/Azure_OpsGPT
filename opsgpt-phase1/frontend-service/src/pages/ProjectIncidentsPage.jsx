@@ -1,18 +1,22 @@
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 
 import api from "../api/client.js";
 import StatusBadge from "../components/StatusBadge.jsx";
 import EmptyState from "../components/states/EmptyState.jsx";
 import ErrorState from "../components/states/ErrorState.jsx";
 import LoadingState from "../components/states/LoadingState.jsx";
+import PageHeader from "../components/ui/PageHeader.jsx";
+import Table from "../components/ui/Table.jsx";
 import { useProject } from "../context/ProjectContext.jsx";
 
 export default function ProjectIncidentsPage() {
   const { projectId } = useParams();
   const { setSelectedProjectId } = useProject();
+  const navigate = useNavigate();
   const [incidents, setIncidents] = useState([]);
+  const [query, setQuery] = useState("");
   const [severity, setSeverity] = useState("all");
   const [status, setStatus] = useState("all");
   const [loading, setLoading] = useState(true);
@@ -41,25 +45,47 @@ export default function ProjectIncidentsPage() {
       incidents.filter((incident) => {
         const severityMatch = severity === "all" || incident.severity === severity;
         const statusMatch = status === "all" || incident.status === status;
-        return severityMatch && statusMatch;
+        const term = query.trim().toLowerCase();
+        const searchMatch =
+          !term ||
+          [incident.title, incident.incident_id, incident.service_name, incident.namespace, incident.cluster]
+            .filter(Boolean)
+            .some((value) => value.toLowerCase().includes(term));
+        return severityMatch && statusMatch && searchMatch;
       }),
-    [incidents, severity, status]
+    [incidents, query, severity, status]
   );
 
   return (
     <section className="page-stack">
-      <div className="page-header">
-        <div>
-          <h1>Incidents</h1>
-          <p>{projectId}</p>
-        </div>
-        <button className="secondary-button" onClick={loadIncidents} type="button">
-          <RefreshCw size={16} />
-          Refresh
-        </button>
-      </div>
+      <PageHeader
+        actions={
+          <button className="secondary-button" onClick={loadIncidents} type="button">
+            <RefreshCw size={16} aria-hidden="true" />
+            Refresh
+          </button>
+        }
+        breadcrumbs={[
+          { label: "Projects", to: "/projects" },
+          { label: projectId, to: `/projects/${projectId}/dashboard` },
+          { label: "Incidents" }
+        ]}
+        description={projectId}
+        title="Incidents"
+      />
 
       <div className="filter-bar">
+        <label>
+          Search
+          <div className="input-with-icon">
+            <Search size={16} aria-hidden="true" />
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Incident, service, namespace"
+            />
+          </div>
+        </label>
         <label>
           Severity
           <select value={severity} onChange={(event) => setSeverity(event.target.value)}>
@@ -85,8 +111,7 @@ export default function ProjectIncidentsPage() {
       {error && <ErrorState message={error} />}
       {!loading && !error && filtered.length === 0 && <EmptyState title="No matching incidents" />}
       {!loading && !error && filtered.length > 0 && (
-        <div className="table-wrap">
-          <table>
+        <Table label="Project incidents">
             <thead>
               <tr>
                 <th>Incident</th>
@@ -100,7 +125,15 @@ export default function ProjectIncidentsPage() {
             </thead>
             <tbody>
               {filtered.map((incident) => (
-                <tr key={incident.incident_id}>
+                <tr
+                  className="clickable-row"
+                  key={incident.incident_id}
+                  onClick={() => navigate(`/projects/${projectId}/incidents/${incident.incident_id}`)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") navigate(`/projects/${projectId}/incidents/${incident.incident_id}`);
+                  }}
+                  tabIndex={0}
+                >
                   <td>
                     <Link to={`/projects/${projectId}/incidents/${incident.incident_id}`}>{incident.title}</Link>
                     <span className="subtle">{incident.incident_id}</span>
@@ -118,8 +151,7 @@ export default function ProjectIncidentsPage() {
                 </tr>
               ))}
             </tbody>
-          </table>
-        </div>
+        </Table>
       )}
     </section>
   );

@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 
 import { useAuth } from "../context/AuthContext.jsx";
+import FormInput from "../components/ui/FormInput.jsx";
 
 export default function LoginPage() {
   const { login, isAuthenticated } = useAuth();
@@ -41,25 +42,35 @@ export default function LoginPage() {
           </div>
         </div>
         <form className="form" onSubmit={handleSubmit}>
-          <label>
-            Email
-            <input value={email} onChange={(event) => setEmail(event.target.value)} type="email" autoComplete="email" />
-          </label>
-          <label>
-            Password
-            <input
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              type="password"
-              autoComplete="current-password"
-            />
-          </label>
+          <FormInput
+            autoComplete="email"
+            id="email"
+            label="Email"
+            onChange={(event) => setEmail(event.target.value)}
+            type="email"
+            value={email}
+          />
+          <FormInput
+            autoComplete="current-password"
+            id="password"
+            label="Password"
+            onChange={(event) => setPassword(event.target.value)}
+            type="password"
+            value={password}
+          />
           {error && <div className="form-error">{error}</div>}
           <button className="primary-button" disabled={loading} type="submit">
             <ShieldCheck size={18} />
             {loading ? "Signing in" : "Sign in"}
           </button>
         </form>
+        <aside className="demo-hint" aria-label="Demo users">
+          <strong>Demo users</strong>
+          <span>admin@company.com</span>
+          <span>senior.engineer@company.com</span>
+          <span>junior.engineer@company.com</span>
+          <small>Password: password123</small>
+        </aside>
       </section>
     </main>
   );

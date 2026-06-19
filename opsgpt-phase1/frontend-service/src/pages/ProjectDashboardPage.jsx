@@ -7,6 +7,8 @@ import StatusBadge from "../components/StatusBadge.jsx";
 import EmptyState from "../components/states/EmptyState.jsx";
 import ErrorState from "../components/states/ErrorState.jsx";
 import LoadingState from "../components/states/LoadingState.jsx";
+import PageHeader from "../components/ui/PageHeader.jsx";
+import Table from "../components/ui/Table.jsx";
 import { useProject } from "../context/ProjectContext.jsx";
 
 export default function ProjectDashboardPage() {
@@ -50,15 +52,19 @@ export default function ProjectDashboardPage() {
 
   return (
     <section className="page-stack">
-      <div className="page-header">
-        <div>
-          <h1>Project Dashboard</h1>
-          <p>{projectId}</p>
-        </div>
-        <Link className="secondary-button link-button" to={`/projects/${projectId}/incidents`}>
-          Incidents
-        </Link>
-      </div>
+      <PageHeader
+        actions={
+          <Link className="secondary-button link-button" to={`/projects/${projectId}/incidents`}>
+            Incidents
+          </Link>
+        }
+        breadcrumbs={[
+          { label: "Projects", to: "/projects" },
+          { label: projectId }
+        ]}
+        description={projectId}
+        title="Project Dashboard"
+      />
 
       <div className="metric-grid">
         {metrics.map((metric) => {
@@ -80,8 +86,7 @@ export default function ProjectDashboardPage() {
         {incidents.length === 0 ? (
           <EmptyState title="No incidents" detail="Project incidents will appear after Alertmanager sends alerts." />
         ) : (
-          <div className="table-wrap">
-            <table>
+          <Table label="Recent incidents">
               <thead>
                 <tr>
                   <th>Incident</th>
@@ -108,8 +113,7 @@ export default function ProjectDashboardPage() {
                   </tr>
                 ))}
               </tbody>
-            </table>
-          </div>
+          </Table>
         )}
       </section>
     </section>

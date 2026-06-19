@@ -1,4 +1,4 @@
-import { ArrowRight, RefreshCw } from "lucide-react";
+import { ArrowRight, RefreshCw, Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -6,6 +6,7 @@ import api from "../api/client.js";
 import EmptyState from "../components/states/EmptyState.jsx";
 import ErrorState from "../components/states/ErrorState.jsx";
 import LoadingState from "../components/states/LoadingState.jsx";
+import PageHeader from "../components/ui/PageHeader.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useProject } from "../context/ProjectContext.jsx";
 
@@ -14,6 +15,7 @@ export default function ProjectsPage() {
   const { setSelectedProjectId } = useProject();
   const navigate = useNavigate();
   const [projects, setProjects] = useState([]);
+  const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -39,14 +41,19 @@ export default function ProjectsPage() {
     navigate(`/projects/${project.project_id}/dashboard`);
   }
 
+  const filteredProjects = projects.filter((project) => {
+    const term = query.trim().toLowerCase();
+    if (!term) return true;
+    return [project.name, project.project_id, project.environment, project.owner_team]
+      .filter(Boolean)
+      .some((value) => value.toLowerCase().includes(term));
+  });
+
   return (
     <section className="page-stack">
-      <div className="page-header">
-        <div>
-          <h1>Projects</h1>
-          <p>Assigned incident workspaces</p>
-        </div>
-        <div className="action-row">
+      <PageHeader
+        actions={
+          <>
           <button className="secondary-button" onClick={loadProjects} type="button">
             <RefreshCw size={16} />
             Refresh
@@ -57,16 +64,39 @@ export default function ProjectsPage() {
               <ArrowRight size={16} />
             </Link>
           )}
-        </div>
+          </>
+        }
+        description="Assigned incident workspaces"
+        title="Projects"
+      />
+
+      <div className="filter-bar">
+        <label>
+          Search projects
+          <div className="input-with-icon">
+            <Search size={16} aria-hidden="true" />
+            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Name, ID, team" />
+          </div>
+        </label>
       </div>
 
       {loading && <LoadingState />}
       {error && <ErrorState message={error} />}
       {!loading && !error && projects.length === 0 && (
-        <EmptyState title="No projects yet" detail="An admin can create a project and assign members." />
+        <EmptyState
+          action={
+            isAdmin ? (
+              <Link className="primary-button link-button" to="/admin/projects">
+                Create project
+              </Link>
+            ) : null
+          }
+          title="No projects yet"
+          detail="No assigned projects are available."
+        />
       )}
       <div className="resource-grid">
-        {projects.map((project) => (
+        {filteredProjects.map((project) => (
           <article className="resource-card" key={project.project_id}>
             <div>
               <h2>{project.name}</h2>
@@ -93,6 +123,7 @@ export default function ProjectsPage() {
           </article>
         ))}
       </div>
+      {!loading && !error && projects.length > 0 && filteredProjects.length === 0 && <EmptyState title="No matching projects" />}
     </section>
   );
 }
