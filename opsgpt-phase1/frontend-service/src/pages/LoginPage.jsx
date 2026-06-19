@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 
 import { useAuth } from "../context/AuthContext.jsx";
-import FormInput from "../components/ui/FormInput.jsx";
+import Input from "../components/ui/Input.jsx";
 
 export default function LoginPage() {
   const { login, isAuthenticated } = useAuth();
@@ -42,7 +42,7 @@ export default function LoginPage() {
           </div>
         </div>
         <form className="form" onSubmit={handleSubmit}>
-          <FormInput
+          <Input
             autoComplete="email"
             id="email"
             label="Email"
@@ -50,7 +50,7 @@ export default function LoginPage() {
             type="email"
             value={email}
           />
-          <FormInput
+          <Input
             autoComplete="current-password"
             id="password"
             label="Password"
@@ -64,13 +64,6 @@ export default function LoginPage() {
             {loading ? "Signing in" : "Sign in"}
           </button>
         </form>
-        <aside className="demo-hint" aria-label="Demo users">
-          <strong>Demo users</strong>
-          <span>admin@company.com</span>
-          <span>senior.engineer@company.com</span>
-          <span>junior.engineer@company.com</span>
-          <small>Password: password123</small>
-        </aside>
       </section>
     </main>
   );

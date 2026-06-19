@@ -6,7 +6,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Settings,
-  X
+  User
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 
@@ -49,14 +49,11 @@ export default function Sidebar({
           </div>
           <button
             aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            className="icon-button desktop-only"
+            className="icon-button"
             onClick={onToggleCollapsed}
             type="button"
           >
             {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
-          </button>
-          <button aria-label="Close menu" className="icon-button mobile-only" onClick={onCloseMobile} type="button">
-            <X size={18} />
           </button>
         </div>
 
@@ -89,6 +86,10 @@ export default function Sidebar({
               <span>Admin</span>
             </NavLink>
           )}
+          <NavLink className={navClass} to="/profile">
+            <User size={18} />
+            <span>Profile</span>
+          </NavLink>
         </nav>
       </aside>
     </>

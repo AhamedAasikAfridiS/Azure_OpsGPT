@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root {
   --primary: #0f766e;
   --primary-hover: #115e59;
@@ -98,22 +102,6 @@ textarea:focus-visible,
   box-shadow: var(--shadow);
 }
 
-.demo-hint {
-  display: grid;
-  gap: 6px;
-  margin-top: 18px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 14px;
-  background: rgba(248, 250, 252, 0.82);
-  color: var(--muted);
-  font-size: 13px;
-}
-
-.demo-hint strong {
-  color: var(--text);
-}
-
 .login-brand,
 .brand {
   display: flex;
@@ -166,6 +154,10 @@ textarea:focus-visible,
 .form-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: end;
+}
+
+.form-card {
+  max-width: 920px;
 }
 
 label {
@@ -1009,6 +1001,31 @@ pre {
   border: 1px solid var(--border);
   border-radius: 8px;
   background: white;
+}
+
+.webhook-display {
+  gap: 6px;
+  color: var(--muted);
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.webhook-display code {
+  text-transform: none;
+  font-weight: 700;
+}
+
+.user-search {
+  display: grid;
+  gap: 12px;
+}
+
+.muted-list-state {
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  padding: 14px;
+  color: var(--muted);
+  background: rgba(248, 250, 252, 0.78);
 }
 
 .receiver-example {

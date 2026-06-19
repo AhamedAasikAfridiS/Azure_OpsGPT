@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import api from "../api/client.js";
+import ProjectCard from "../components/projects/ProjectCard.jsx";
 import EmptyState from "../components/states/EmptyState.jsx";
 import ErrorState from "../components/states/ErrorState.jsx";
 import LoadingState from "../components/states/LoadingState.jsx";
@@ -97,30 +98,7 @@ export default function ProjectsPage() {
       )}
       <div className="resource-grid">
         {filteredProjects.map((project) => (
-          <article className="resource-card" key={project.project_id}>
-            <div>
-              <h2>{project.name}</h2>
-              <p>{project.description || "No description"}</p>
-            </div>
-            <dl className="meta-grid">
-              <div>
-                <dt>Project ID</dt>
-                <dd>{project.project_id}</dd>
-              </div>
-              <div>
-                <dt>Environment</dt>
-                <dd>{project.environment}</dd>
-              </div>
-              <div>
-                <dt>Owner</dt>
-                <dd>{project.owner_team || "Unassigned"}</dd>
-              </div>
-            </dl>
-            <button className="primary-button" onClick={() => openProject(project)} type="button">
-              Open
-              <ArrowRight size={16} />
-            </button>
-          </article>
+          <ProjectCard key={project.project_id} onOpen={openProject} project={project} />
         ))}
       </div>
       {!loading && !error && projects.length > 0 && filteredProjects.length === 0 && <EmptyState title="No matching projects" />}

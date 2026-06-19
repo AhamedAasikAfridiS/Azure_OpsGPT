@@ -1,8 +1,9 @@
-import { ArrowRight, Plus, RefreshCw } from "lucide-react";
+import { ArrowRight, RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 
 import api from "../api/client.js";
+import ProjectForm from "../components/projects/ProjectForm.jsx";
 import EmptyState from "../components/states/EmptyState.jsx";
 import ErrorState from "../components/states/ErrorState.jsx";
 import LoadingState from "../components/states/LoadingState.jsx";
@@ -72,36 +73,7 @@ export default function AdminProjectsPage() {
         <div className="section-heading">
           <h2>Create project</h2>
         </div>
-        <form className="form-grid" onSubmit={createProject}>
-          <label>
-            Name
-            <input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} required />
-          </label>
-          <label>
-            Environment
-            <input
-              value={form.environment}
-              onChange={(event) => setForm({ ...form, environment: event.target.value })}
-              required
-            />
-          </label>
-          <label>
-            Owner team
-            <input value={form.owner_team} onChange={(event) => setForm({ ...form, owner_team: event.target.value })} />
-          </label>
-          <label className="full-span">
-            Description
-            <textarea
-              value={form.description}
-              onChange={(event) => setForm({ ...form, description: event.target.value })}
-              rows="3"
-            />
-          </label>
-          <button className="primary-button" disabled={saving || !form.name.trim()} type="submit">
-            <Plus size={16} />
-            Create
-          </button>
-        </form>
+        <ProjectForm form={form} onChange={setForm} onSubmit={createProject} saving={saving} />
       </section>
 
       {loading && <LoadingState />}
