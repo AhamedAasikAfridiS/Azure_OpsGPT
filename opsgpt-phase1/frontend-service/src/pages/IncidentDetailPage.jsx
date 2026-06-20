@@ -1,4 +1,4 @@
-import { Check, Send } from "lucide-react";
+import { AlertTriangle, BrainCircuit, Check, CheckCircle2, Gauge, Send } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
@@ -11,6 +11,78 @@ import LoadingState from "../components/states/LoadingState.jsx";
 import PageHeader from "../components/ui/PageHeader.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useProject } from "../context/ProjectContext.jsx";
+
+function safeText(value) {
+  if (typeof value === "string") return value.trim() || null;
+  if (typeof value === "number") return String(value);
+  if (value && typeof value === "object") {
+    return safeText(value.text ?? value.message ?? value.description);
+  }
+  return null;
+}
+
+function parseMaybeJson(value) {
+  if (typeof value !== "string") return value;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  try {
+    return JSON.parse(trimmed);
+  } catch {
+    return value;
+  }
+}
+
+function normalizeList(value) {
+  const parsed = parseMaybeJson(value);
+  const items = Array.isArray(parsed) ? parsed : [parsed];
+
+  return items.flatMap((item) => {
+    if (Array.isArray(item)) return normalizeList(item);
+    const text = safeText(item);
+    return text ? [text] : [];
+  });
+}
+
+function normalizeRecommendedFix(value) {
+  const normalized = {
+    immediate_actions: [],
+    long_term_actions: [],
+    runbook_suggestions: [],
+    rawText: null
+  };
+  const parsed = parseMaybeJson(value);
+
+  if (!parsed) return normalized;
+  if (typeof parsed === "string") {
+    normalized.rawText = parsed.trim() || null;
+    return normalized;
+  }
+  if (Array.isArray(parsed)) {
+    normalized.immediate_actions = normalizeList(parsed);
+    return normalized;
+  }
+  if (typeof parsed !== "object") return normalized;
+
+  normalized.immediate_actions = normalizeList(
+    parsed.immediate_actions ?? parsed.immediateActions
+  );
+  normalized.long_term_actions = normalizeList(
+    parsed.long_term_actions ?? parsed.longTermActions
+  );
+  normalized.runbook_suggestions = normalizeList(
+    parsed.runbook_suggestions ?? parsed.runbookSuggestions
+  );
+  return normalized;
+}
+
+function safeErrorMessage(value) {
+  const message = safeText(value);
+  if (!message || /traceback|stack trace|at \w+ \(/i.test(message)) {
+    return "The AI analysis could not be completed. Please review the service configuration and try again.";
+  }
+  return message.length > 280 ? `${message.slice(0, 277)}...` : message;
+}
 
 export default function IncidentDetailPage() {
   const { projectId, incidentId } = useParams();
@@ -76,8 +148,28 @@ export default function IncidentDetailPage() {
   if (error) return <ErrorState message={error} />;
   if (!incident) return <EmptyState title="Incident not found" />;
 
+  const aiSummary = safeText(incident.ai_summary);
+  const rootCause = safeText(incident.root_cause);
+  const supportingEvidence = normalizeList(incident.supporting_evidence);
+  const recommendedFix = normalizeRecommendedFix(incident.recommended_fix);
+  const confidenceScore = Number(incident.confidence_score);
+  const hasConfidence = Number.isFinite(confidenceScore) && confidenceScore >= 0 && confidenceScore <= 100;
+  const hasRecommendedFix = recommendedFix.rawText || Object.values(recommendedFix)
+    .filter((value) => Array.isArray(value))
+    .some((items) => items.length > 0);
+  const hasAiContent = aiSummary || rootCause || supportingEvidence.length > 0 || hasConfidence || hasRecommendedFix;
+  const analysisFailed = incident.analysis_status === "failed" || Boolean(incident.error_message);
+  const wrapStyle = { maxWidth: "100%", minWidth: 0, overflowWrap: "anywhere", wordBreak: "break-word" };
+  const aiCardStyle = {
+    ...wrapStyle,
+    padding: "16px",
+    border: "1px solid var(--border)",
+    borderRadius: "8px",
+    background: "rgba(248, 250, 252, 0.78)"
+  };
+
   return (
-    <section className="page-stack">
+    <section className="page-stack" style={{ maxWidth: "100%", minWidth: 0 }}>
       <BackButton to={`/projects/${projectId}/incidents`} />
       <PageHeader
         actions={
@@ -169,44 +261,138 @@ export default function IncidentDetailPage() {
           </div>
         </section>
 
-        <section className="section-block">
-          <div className="section-heading">
-            <h2>AI Summary</h2>
-          </div>
-          {incident.ai_summary || incident.root_cause || incident.recommended_fix ? (
-            <div className="analysis-stack">
-              <article>
-                <h3>Summary</h3>
-                <p>{incident.ai_summary || "AI analysis is not available for this incident yet."}</p>
-              </article>
-              <article>
-                <h3>Root Cause Analysis</h3>
-                <p>{incident.root_cause || "AI analysis is not available for this incident yet."}</p>
-              </article>
-              <article>
-                <h3>Recommended Fix</h3>
-                {incident.recommended_fix ? (
-                  <pre>{JSON.stringify(incident.recommended_fix, null, 2)}</pre>
-                ) : (
-                  <p>AI analysis is not available for this incident yet.</p>
-                )}
-              </article>
-              {incident.supporting_evidence?.length > 0 && (
-                <article>
-                  <h3>Supporting Evidence</h3>
-                  <ul className="plain-list">
-                    {incident.supporting_evidence.map((item) => (
-                      <li key={item}>{item}</li>
-                    ))}
-                  </ul>
-                </article>
-              )}
-            </div>
-          ) : (
-            <EmptyState title="AI analysis is not available for this incident yet." />
-          )}
-        </section>
       </div>
+
+      <section
+        aria-labelledby="ai-analysis-heading"
+        className="section-block"
+        style={{ ...wrapStyle, overflow: "hidden" }}
+      >
+        <div className="section-heading">
+          <h2 id="ai-analysis-heading">
+            <BrainCircuit aria-hidden="true" size={20} style={{ marginRight: "8px", verticalAlign: "text-bottom" }} />
+            AI Analysis
+          </h2>
+        </div>
+
+        {analysisFailed && (
+          <div
+            role="alert"
+            style={{
+              ...wrapStyle,
+              display: "flex",
+              gap: "10px",
+              marginBottom: "16px",
+              padding: "14px",
+              border: "1px solid rgba(217, 119, 6, 0.28)",
+              borderRadius: "8px",
+              background: "rgba(217, 119, 6, 0.08)",
+              color: "#92400e"
+            }}
+          >
+            <AlertTriangle aria-hidden="true" size={20} style={{ flex: "0 0 auto" }} />
+            <div style={wrapStyle}>
+              <strong>AI analysis failed</strong>
+              <p style={{ ...wrapStyle, margin: "4px 0 0" }}>{safeErrorMessage(incident.error_message)}</p>
+            </div>
+          </div>
+        )}
+
+        {!hasAiContent ? (
+          <p className="muted" style={{ ...wrapStyle, margin: 0 }}>
+            AI analysis is not available for this incident yet.
+          </p>
+        ) : (
+          <div
+            style={{
+              ...wrapStyle,
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 260px), 1fr))",
+              gap: "14px"
+            }}
+          >
+            <article style={aiCardStyle}>
+              <h3 style={{ margin: "0 0 8px", fontSize: "15px" }}>AI Summary</h3>
+              <p style={{ ...wrapStyle, margin: 0 }}>
+                {aiSummary || "AI analysis is not available for this incident yet."}
+              </p>
+            </article>
+
+            <article style={aiCardStyle}>
+              <h3 style={{ margin: "0 0 8px", fontSize: "15px" }}>Root Cause Analysis</h3>
+              <p style={{ ...wrapStyle, margin: 0 }}>
+                {rootCause || "AI analysis is not available for this incident yet."}
+              </p>
+            </article>
+
+            <article style={{ ...aiCardStyle, gridColumn: "1 / -1" }}>
+              <h3 style={{ margin: "0 0 8px", fontSize: "15px" }}>Supporting Evidence</h3>
+              {supportingEvidence.length === 0 ? (
+                <p className="muted" style={{ ...wrapStyle, margin: 0 }}>No supporting evidence is available yet.</p>
+              ) : (
+                <ul className="plain-list" style={wrapStyle}>
+                  {supportingEvidence.map((item, index) => (
+                    <li key={`${item}-${index}`} style={wrapStyle}>{item}</li>
+                  ))}
+                </ul>
+              )}
+            </article>
+
+            <article style={aiCardStyle}>
+              <h3 style={{ margin: "0 0 10px", fontSize: "15px" }}>
+                <Gauge aria-hidden="true" size={17} style={{ marginRight: "7px", verticalAlign: "text-bottom" }} />
+                Confidence Score
+              </h3>
+              {hasConfidence ? (
+                <>
+                  <strong style={{ fontSize: "24px" }}>{Math.round(confidenceScore)}%</strong>
+                  <div
+                    aria-label="AI confidence score"
+                    aria-valuemax={100}
+                    aria-valuemin={0}
+                    aria-valuenow={Math.round(confidenceScore)}
+                    role="progressbar"
+                    style={{ height: "8px", marginTop: "10px", overflow: "hidden", borderRadius: "999px", background: "var(--border)" }}
+                  >
+                    <span style={{ display: "block", width: `${confidenceScore}%`, height: "100%", background: "var(--primary)" }} />
+                  </div>
+                </>
+              ) : (
+                <p className="muted" style={{ ...wrapStyle, margin: 0 }}>Confidence is not available yet.</p>
+              )}
+            </article>
+
+            <article style={{ ...aiCardStyle, gridColumn: "1 / -1" }}>
+              <h3 style={{ margin: "0 0 12px", fontSize: "15px" }}>Recommended Fix</h3>
+              {recommendedFix.rawText ? (
+                <p style={{ ...wrapStyle, margin: 0 }}>{recommendedFix.rawText}</p>
+              ) : !hasRecommendedFix ? (
+                <p className="muted" style={{ ...wrapStyle, margin: 0 }}>No fix recommendation is available yet.</p>
+              ) : (
+                <div style={{ ...wrapStyle, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))", gap: "14px" }}>
+                  {[
+                    ["Immediate Actions", recommendedFix.immediate_actions],
+                    ["Long-Term Actions", recommendedFix.long_term_actions],
+                    ["Runbook Suggestions", recommendedFix.runbook_suggestions]
+                  ].map(([title, actions]) => actions.length > 0 && (
+                    <section key={title} style={wrapStyle}>
+                      <h4 style={{ margin: "0 0 8px", fontSize: "14px" }}>{title}</h4>
+                      <ul className="plain-list" style={wrapStyle}>
+                        {actions.map((action, index) => (
+                          <li key={`${action}-${index}`} style={{ ...wrapStyle, display: "flex", gap: "8px", alignItems: "flex-start" }}>
+                            <CheckCircle2 aria-hidden="true" color="var(--success)" size={16} style={{ flex: "0 0 auto", marginTop: "3px" }} />
+                            <span style={wrapStyle}>{action}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </section>
+                  ))}
+                </div>
+              )}
+            </article>
+          </div>
+        )}
+      </section>
 
       {canEditIncidents && (
         <section className="section-block">
