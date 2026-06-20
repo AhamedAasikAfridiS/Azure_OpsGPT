@@ -1,4 +1,4 @@
-import { AlertTriangle, BrainCircuit, Check, CheckCircle2, Gauge, Send } from "lucide-react";
+import { AlertTriangle, BrainCircuit, Check, CheckCircle2, CircleDot, Send } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
@@ -152,20 +152,19 @@ export default function IncidentDetailPage() {
   const rootCause = safeText(incident.root_cause);
   const supportingEvidence = normalizeList(incident.supporting_evidence);
   const recommendedFix = normalizeRecommendedFix(incident.recommended_fix);
-  const confidenceScore = Number(incident.confidence_score);
-  const hasConfidence = Number.isFinite(confidenceScore) && confidenceScore >= 0 && confidenceScore <= 100;
   const hasRecommendedFix = recommendedFix.rawText || Object.values(recommendedFix)
     .filter((value) => Array.isArray(value))
     .some((items) => items.length > 0);
-  const hasAiContent = aiSummary || rootCause || supportingEvidence.length > 0 || hasConfidence || hasRecommendedFix;
+  const hasAiContent = aiSummary || rootCause || supportingEvidence.length > 0 || hasRecommendedFix;
   const analysisFailed = incident.analysis_status === "failed" || Boolean(incident.error_message);
   const wrapStyle = { maxWidth: "100%", minWidth: 0, overflowWrap: "anywhere", wordBreak: "break-word" };
   const aiCardStyle = {
     ...wrapStyle,
-    padding: "16px",
+    padding: "20px",
     border: "1px solid var(--border)",
     borderRadius: "8px",
-    background: "rgba(248, 250, 252, 0.78)"
+    background: "rgba(248, 250, 252, 0.78)",
+    boxShadow: "0 6px 18px rgba(15, 23, 42, 0.035)"
   };
 
   return (
@@ -307,79 +306,83 @@ export default function IncidentDetailPage() {
             style={{
               ...wrapStyle,
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 260px), 1fr))",
-              gap: "14px"
+              gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 320px), 1fr))",
+              gap: "16px"
             }}
           >
             <article style={aiCardStyle}>
-              <h3 style={{ margin: "0 0 8px", fontSize: "15px" }}>AI Summary</h3>
-              <p style={{ ...wrapStyle, margin: 0 }}>
-                {aiSummary || "AI analysis is not available for this incident yet."}
+              <h3 style={{ margin: "0 0 10px", fontSize: "17px" }}>AI Summary</h3>
+              <p style={{ ...wrapStyle, margin: 0, color: "var(--text)", fontSize: "16px", lineHeight: 1.7 }}>
+                {aiSummary || "AI summary is not available yet."}
               </p>
             </article>
 
             <article style={aiCardStyle}>
-              <h3 style={{ margin: "0 0 8px", fontSize: "15px" }}>Root Cause Analysis</h3>
-              <p style={{ ...wrapStyle, margin: 0 }}>
-                {rootCause || "AI analysis is not available for this incident yet."}
+              <h3 style={{ margin: "0 0 10px", fontSize: "17px" }}>Root Cause Analysis</h3>
+              <p style={{ ...wrapStyle, margin: 0, color: "var(--text)", fontSize: "16px", lineHeight: 1.7 }}>
+                {rootCause || "Root cause analysis is not available yet."}
               </p>
             </article>
 
             <article style={{ ...aiCardStyle, gridColumn: "1 / -1" }}>
-              <h3 style={{ margin: "0 0 8px", fontSize: "15px" }}>Supporting Evidence</h3>
+              <h3 style={{ margin: "0 0 12px", fontSize: "17px" }}>Supporting Evidence</h3>
               {supportingEvidence.length === 0 ? (
                 <p className="muted" style={{ ...wrapStyle, margin: 0 }}>No supporting evidence is available yet.</p>
               ) : (
-                <ul className="plain-list" style={wrapStyle}>
+                <ul style={{ ...wrapStyle, display: "grid", gap: "10px", margin: 0, padding: 0, listStyle: "none" }}>
                   {supportingEvidence.map((item, index) => (
-                    <li key={`${item}-${index}`} style={wrapStyle}>{item}</li>
+                    <li
+                      key={`${item}-${index}`}
+                      style={{
+                        ...wrapStyle,
+                        display: "flex",
+                        alignItems: "flex-start",
+                        gap: "10px",
+                        padding: "12px 14px",
+                        border: "1px solid var(--border)",
+                        borderRadius: "8px",
+                        background: "white",
+                        fontSize: "15px",
+                        lineHeight: 1.65
+                      }}
+                    >
+                      <CircleDot aria-hidden="true" color="var(--accent)" size={17} style={{ flex: "0 0 auto", marginTop: "3px" }} />
+                      <span style={wrapStyle}>{item}</span>
+                    </li>
                   ))}
                 </ul>
               )}
             </article>
 
-            <article style={aiCardStyle}>
-              <h3 style={{ margin: "0 0 10px", fontSize: "15px" }}>
-                <Gauge aria-hidden="true" size={17} style={{ marginRight: "7px", verticalAlign: "text-bottom" }} />
-                Confidence Score
-              </h3>
-              {hasConfidence ? (
-                <>
-                  <strong style={{ fontSize: "24px" }}>{Math.round(confidenceScore)}%</strong>
-                  <div
-                    aria-label="AI confidence score"
-                    aria-valuemax={100}
-                    aria-valuemin={0}
-                    aria-valuenow={Math.round(confidenceScore)}
-                    role="progressbar"
-                    style={{ height: "8px", marginTop: "10px", overflow: "hidden", borderRadius: "999px", background: "var(--border)" }}
-                  >
-                    <span style={{ display: "block", width: `${confidenceScore}%`, height: "100%", background: "var(--primary)" }} />
-                  </div>
-                </>
-              ) : (
-                <p className="muted" style={{ ...wrapStyle, margin: 0 }}>Confidence is not available yet.</p>
-              )}
-            </article>
-
             <article style={{ ...aiCardStyle, gridColumn: "1 / -1" }}>
-              <h3 style={{ margin: "0 0 12px", fontSize: "15px" }}>Recommended Fix</h3>
+              <h3 style={{ margin: "0 0 14px", fontSize: "17px" }}>Recommended Fix</h3>
               {recommendedFix.rawText ? (
-                <p style={{ ...wrapStyle, margin: 0 }}>{recommendedFix.rawText}</p>
+                <p style={{ ...wrapStyle, margin: 0, color: "var(--text)", fontSize: "16px", lineHeight: 1.7 }}>
+                  {recommendedFix.rawText}
+                </p>
               ) : !hasRecommendedFix ? (
                 <p className="muted" style={{ ...wrapStyle, margin: 0 }}>No fix recommendation is available yet.</p>
               ) : (
-                <div style={{ ...wrapStyle, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))", gap: "14px" }}>
+                <div style={{ ...wrapStyle, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 240px), 1fr))", gap: "14px" }}>
                   {[
                     ["Immediate Actions", recommendedFix.immediate_actions],
                     ["Long-Term Actions", recommendedFix.long_term_actions],
                     ["Runbook Suggestions", recommendedFix.runbook_suggestions]
                   ].map(([title, actions]) => actions.length > 0 && (
-                    <section key={title} style={wrapStyle}>
-                      <h4 style={{ margin: "0 0 8px", fontSize: "14px" }}>{title}</h4>
-                      <ul className="plain-list" style={wrapStyle}>
+                    <section
+                      key={title}
+                      style={{
+                        ...wrapStyle,
+                        padding: "16px",
+                        border: "1px solid var(--border)",
+                        borderRadius: "8px",
+                        background: "white"
+                      }}
+                    >
+                      <h4 style={{ margin: "0 0 10px", fontSize: "15px" }}>{title}</h4>
+                      <ul style={{ ...wrapStyle, display: "grid", gap: "10px", margin: 0, padding: 0, listStyle: "none" }}>
                         {actions.map((action, index) => (
-                          <li key={`${action}-${index}`} style={{ ...wrapStyle, display: "flex", gap: "8px", alignItems: "flex-start" }}>
+                          <li key={`${action}-${index}`} style={{ ...wrapStyle, display: "flex", gap: "8px", alignItems: "flex-start", lineHeight: 1.6 }}>
                             <CheckCircle2 aria-hidden="true" color="var(--success)" size={16} style={{ flex: "0 0 auto", marginTop: "3px" }} />
                             <span style={wrapStyle}>{action}</span>
                           </li>
