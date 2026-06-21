@@ -5,8 +5,14 @@ const api = axios.create({
   timeout: 15000
 });
 
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("opsgpt_token");
+let accessTokenProvider = null;
+
+export function setAccessTokenProvider(provider) {
+  accessTokenProvider = provider;
+}
+
+api.interceptors.request.use(async (config) => {
+  const token = accessTokenProvider ? await accessTokenProvider() : localStorage.getItem("opsgpt_token");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }

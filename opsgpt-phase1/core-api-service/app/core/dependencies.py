@@ -5,9 +5,17 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.core.entra_security import (
+    EntraConfigurationError,
+    EntraRoleError,
+    EntraTokenValidationError,
+    map_entra_role,
+    validate_entra_access_token,
+)
 from app.core.security import decode_access_token
 from app.db.database import get_db
 from app.models.models import Project, ProjectMembership, User
+from app.services.user_service import upsert_entra_user
 
 bearer_scheme = HTTPBearer(auto_error=False)
 
@@ -18,6 +26,23 @@ def get_current_user(
 ) -> User:
     if credentials is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing bearer token")
+
+    if settings.uses_entra_auth:
+        try:
+            claims = validate_entra_access_token(credentials.credentials)
+            role = map_entra_role(claims)
+            try:
+                return upsert_entra_user(db, claims, role)
+            except ValueError as exc:
+                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(exc)) from exc
+        except EntraRoleError as exc:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(exc)) from exc
+        except EntraConfigurationError as exc:
+            if not settings.allow_local_auth:
+                raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc)) from exc
+        except EntraTokenValidationError as exc:
+            if not settings.allow_local_auth:
+                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(exc)) from exc
 
     payload = decode_access_token(credentials.credentials)
     if not payload or "sub" not in payload:

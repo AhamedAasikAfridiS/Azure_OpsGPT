@@ -2,6 +2,14 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+ARG VITE_CORE_API_URL=/api/core
+ARG VITE_AUTH_PROVIDER=entra
+ARG VITE_AZURE_TENANT_ID
+ARG VITE_AZURE_CLIENT_ID
+ARG VITE_AZURE_REDIRECT_URI
+ARG VITE_AZURE_POST_LOGOUT_REDIRECT_URI
+ARG VITE_AZURE_API_SCOPE
+
 COPY package*.json ./
 RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
 

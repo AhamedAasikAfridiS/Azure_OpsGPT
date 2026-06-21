@@ -19,6 +19,8 @@ class UserRead(BaseModel):
     email: EmailStr
     role: Role
     is_active: bool
+    auth_provider: str = "local"
+    entra_oid: str | None = None
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)

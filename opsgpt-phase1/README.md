@@ -73,7 +73,6 @@ OpsGPT solves these problems through a project-based incident workflow:
 - Azure Service Bus.
 - Terraform.
 - Kubernetes manifests.
-- Microsoft Entra ID.
 - Azure Monitor integration.
 - Grafana integration.
 - Datadog, Splunk, New Relic, or other monitoring integrations.
@@ -186,7 +185,7 @@ Responsibilities:
 
 Business logic:
 
-- Stores the JWT token used for authenticated Core API calls.
+- Uses MSAL to obtain Microsoft Entra ID access tokens for authenticated Core API calls.
 - Calls Core API for normal frontend workflows.
 - Displays role-based actions.
 - Hides admin-only navigation from non-admin users.
@@ -214,7 +213,7 @@ The Core API service owns the primary user-facing application API.
 Responsibilities:
 
 - Authentication.
-- JWT generation.
+- Microsoft Entra ID access-token validation and local JWT fallback when explicitly enabled.
 - RBAC.
 - Project management.
 - Project membership.
@@ -584,7 +583,7 @@ Possible incident statuses depend on the frontend and Core API implementation, b
 
 ## 18. RBAC Model
 
-OpsGPT uses local JWT authentication and role-based access control in Phase 1.
+OpsGPT uses Microsoft Entra ID authentication and existing role-based access control. Entra Groups are assigned to Enterprise Application app roles, and Core API maps the validated token `roles` claim to the existing OpsGPT RBAC roles. It does not use raw group object IDs as the primary authorization source.
 
 Roles:
 
@@ -728,7 +727,7 @@ Use this README as a planning map before designing Azure infrastructure:
 2. Use the Nginx routing section to design ingress and path routing.
 3. Use the webhook section to decide how Alertmanager will reach OpsGPT.
 4. Use the database section to decide whether Phase 1 shared DB is acceptable for production.
-5. Use the RBAC section to plan identity and access changes, such as a future move to Microsoft Entra ID.
+5. Use the RBAC section to plan Entra group, app-role, and project-membership operations.
 6. Use the Foundry workflow section to plan AI networking, credentials, and secret storage.
 7. Use the notification workflow section to decide where Slack secrets and delivery logs should live.
 8. Use the Azure mapping table to convert local services into cloud resources.
@@ -759,7 +758,7 @@ Prometheus Alertmanager is the only alert source in Phase 1. Prometheus and Aler
 
 OpsGPT does not scrape dashboards, query the Prometheus metrics API, connect to Grafana dashboards, or integrate Azure Monitor in Phase 1.
 
-Azure deployment, AKS, Terraform, Helm, Kubernetes manifests, Azure Service Bus, Azure App Service, Azure Container Apps, Microsoft Entra ID, production networking, and private endpoints are next-phase items and are not included.
+Azure deployment, AKS, Terraform, Helm, Kubernetes manifests, Azure Service Bus, Azure App Service, Azure Container Apps, production networking, and private endpoints are next-phase items and are not included.
 
 ## Database
 
@@ -823,13 +822,57 @@ receivers:
 
 ## Authentication
 
-Seeded users:
+OpsGPT uses Microsoft Entra ID for user authentication. The React frontend uses MSAL redirect sign-in to obtain an access token for Core API, and Core API validates the token signature, expiry, issuer, audience, and tenant against Entra JWKS before authorizing the request.
 
-- `junior.engineer@company.com` / `password123` / `junior_engineer`
-- `senior.engineer@company.com` / `password123` / `senior_engineer`
-- `admin@company.com` / `password123` / `admin`
+OpsGPT authorizes the `roles` claim emitted by Entra app roles, not raw Entra group object IDs. Configure Enterprise Application assignments as follows:
 
-Phase 1 uses local JWT authentication with bearer tokens.
+| Entra Group | App Role Value | OpsGPT Role |
+| ----------- | -------------- | ----------- |
+| `OpsGPT_Admins` | `OpsGPT.Admin` | `admin` |
+| `OpsGPT_Seniors` | `OpsGPT.Senior` | `senior_engineer` |
+| `OpsGPT_Juniors` | `OpsGPT.Junior` | `junior_engineer` |
+
+When a token has multiple recognized app roles, Core API applies `Admin`, then `Senior`, then `Junior` priority. A valid Entra token without a recognized OpsGPT app role is rejected with `403`. The frontend displays the resulting role from `GET /auth/me`; it does not derive authorization from a decoded browser token.
+
+### Azure Portal Setup
+
+1. Create the `OpsGPT_Admins`, `OpsGPT_Seniors`, and `OpsGPT_Juniors` security groups.
+2. Create or use an OpsGPT app registration, expose the Core API delegated scope such as `api://<CORE_API_CLIENT_ID>/access_as_user`, and configure the frontend redirect URI.
+3. Create app roles available to users/groups with values `OpsGPT.Admin`, `OpsGPT.Senior`, and `OpsGPT.Junior`.
+4. In the Enterprise Application, assign each Entra group to its matching app role.
+5. Register `http://localhost:8080` for local use or the deployed HTTPS URL for a later production environment.
+6. Configure the environment values below before building the frontend and starting the services.
+
+Frontend configuration is public browser configuration and is embedded at Vite build time:
+
+```text
+VITE_AUTH_PROVIDER=entra
+VITE_AZURE_TENANT_ID=
+VITE_AZURE_CLIENT_ID=
+VITE_AZURE_REDIRECT_URI=http://localhost:8080
+VITE_AZURE_POST_LOGOUT_REDIRECT_URI=http://localhost:8080
+VITE_AZURE_API_SCOPE=api://<CORE_API_CLIENT_ID>/access_as_user
+VITE_CORE_API_URL=/api/core
+```
+
+Core API validation configuration remains server-side:
+
+```text
+AUTH_PROVIDER=entra
+ALLOW_LOCAL_AUTH=false
+AZURE_TENANT_ID=
+AZURE_CLIENT_ID=
+AZURE_API_AUDIENCE=
+AZURE_ISSUER=
+AZURE_JWKS_URL=
+ENTRA_ROLE_ADMIN=OpsGPT.Admin
+ENTRA_ROLE_SENIOR=OpsGPT.Senior
+ENTRA_ROLE_JUNIOR=OpsGPT.Junior
+```
+
+`AZURE_ISSUER` and `AZURE_JWKS_URL` may be left blank to use their tenant-based Microsoft defaults. Core API caches signing keys in memory and never logs bearer tokens or secrets. A user is upserted into the local `users` table on the first successful Entra-authenticated request; no Microsoft Graph lookup is implemented, so the user must sign in once before an admin can find and assign that user to a project. Internal Alert Ingestion and AI Analysis APIs continue to use `X-Internal-API-Key` and do not require Entra tokens.
+
+Local seeded accounts remain available only when explicitly configured with `AUTH_PROVIDER=local` or `ALLOW_LOCAL_AUTH=true`. With `AUTH_PROVIDER=entra` and `ALLOW_LOCAL_AUTH=false`, `POST /auth/login` returns `Local login is disabled. Use Microsoft Entra ID sign-in.`
 
 ## Microsoft Foundry Configuration
 

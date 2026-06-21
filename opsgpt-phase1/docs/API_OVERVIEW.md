@@ -12,9 +12,11 @@ Base path:
 
 Auth:
 
-- `POST /auth/login`
-- `GET /auth/me`
-- `POST /auth/logout`
+- `POST /auth/login` is available only for the explicit local-development fallback.
+- `GET /auth/me` validates the bearer token and returns the locally upserted Entra user and mapped OpsGPT role.
+- `POST /auth/logout` remains a client-side token cleanup endpoint; MSAL handles Entra logout redirects in the frontend.
+
+With `AUTH_PROVIDER=entra`, browser requests must carry a Microsoft Entra access token for the configured Core API audience. Core API validates its signature, `iss`, `aud`, `exp`, and `tid`, then maps token app roles in priority order: `OpsGPT.Admin` -> `admin`, `OpsGPT.Senior` -> `senior_engineer`, and `OpsGPT.Junior` -> `junior_engineer`. A valid token without one of these roles receives `403`; raw Entra group IDs are not an API authorization input.
 
 Users:
 
@@ -76,6 +78,8 @@ Internal APIs require:
 ```text
 X-Internal-API-Key: <INTERNAL_API_KEY>
 ```
+
+These service-to-service endpoints do not require Microsoft Entra user tokens.
 
 Internal endpoints:
 

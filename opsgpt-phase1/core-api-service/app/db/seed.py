@@ -33,9 +33,12 @@ def seed_default_users() -> int:
             email = item["email"].lower()
             existing = db.query(User).filter(func.lower(User.email) == email).first()
             if existing:
+                if existing.auth_provider == "entra":
+                    continue
                 existing.name = item["name"]
                 existing.email = email
                 existing.password_hash = hash_password(item["password"])
+                existing.auth_provider = "local"
                 existing.role = item["role"]
                 existing.is_active = True
                 seeded_count += 1
@@ -45,6 +48,7 @@ def seed_default_users() -> int:
                     name=item["name"],
                     email=email,
                     password_hash=hash_password(item["password"]),
+                    auth_provider="local",
                     role=item["role"],
                     is_active=True,
                 )

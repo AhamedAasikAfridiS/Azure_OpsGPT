@@ -20,9 +20,19 @@ services:
       context: ./core-api-service
     environment:
       DATABASE_URL: postgresql://opsgpt_user:opsgpt_password@opsgpt-db:5432/opsgpt_db
+      AUTH_PROVIDER: ${AUTH_PROVIDER:-entra}
+      ALLOW_LOCAL_AUTH: ${ALLOW_LOCAL_AUTH:-false}
       JWT_SECRET_KEY: change-me
       JWT_ALGORITHM: HS256
       JWT_EXPIRE_MINUTES: 60
+      AZURE_TENANT_ID: ${AZURE_TENANT_ID}
+      AZURE_CLIENT_ID: ${AZURE_CLIENT_ID}
+      AZURE_API_AUDIENCE: ${AZURE_API_AUDIENCE}
+      AZURE_ISSUER: ${AZURE_ISSUER}
+      AZURE_JWKS_URL: ${AZURE_JWKS_URL}
+      ENTRA_ROLE_ADMIN: ${ENTRA_ROLE_ADMIN:-OpsGPT.Admin}
+      ENTRA_ROLE_SENIOR: ${ENTRA_ROLE_SENIOR:-OpsGPT.Senior}
+      ENTRA_ROLE_JUNIOR: ${ENTRA_ROLE_JUNIOR:-OpsGPT.Junior}
       INTERNAL_API_KEY: change-me-internal-key
       NOTIFICATION_SERVICE_URL: http://notification-service:8004
       ENABLE_NOTIFICATIONS: "true"
@@ -112,8 +122,16 @@ services:
   frontend-service:
     build:
       context: ./frontend-service
+      args:
+        VITE_CORE_API_URL: ${VITE_CORE_API_URL:-/api/core}
+        VITE_AUTH_PROVIDER: ${VITE_AUTH_PROVIDER:-entra}
+        VITE_AZURE_TENANT_ID: ${VITE_AZURE_TENANT_ID}
+        VITE_AZURE_CLIENT_ID: ${VITE_AZURE_CLIENT_ID}
+        VITE_AZURE_REDIRECT_URI: ${VITE_AZURE_REDIRECT_URI:-http://localhost:8080}
+        VITE_AZURE_POST_LOGOUT_REDIRECT_URI: ${VITE_AZURE_POST_LOGOUT_REDIRECT_URI:-http://localhost:8080}
+        VITE_AZURE_API_SCOPE: ${VITE_AZURE_API_SCOPE}
     environment:
-      VITE_CORE_API_URL: /api/core
+      VITE_CORE_API_URL: ${VITE_CORE_API_URL:-/api/core}
     depends_on:
       - core-api-service
     ports:

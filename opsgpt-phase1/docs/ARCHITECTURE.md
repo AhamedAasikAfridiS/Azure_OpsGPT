@@ -68,6 +68,18 @@ Alert Ingestion validates `{project_id}` and `{webhook_token}` through Core API 
 
 AI Analysis creates deterministic incidents when correlation succeeds. Foundry AI fields are added only if Foundry is configured and returns valid JSON. Missing config, request failure, or invalid JSON records an analysis failure and leaves AI fields empty for the frontend.
 
+## Microsoft Entra ID IAM
+
+The browser signs in through MSAL and sends an Entra access token only to Core API. Core API fetches and caches Entra JWKS, validates the token signature, issuer, audience, expiry, and tenant, then maps the token `roles` claim to the existing RBAC role.
+
+```text
+OpsGPT_Admins  -> OpsGPT.Admin  -> admin
+OpsGPT_Seniors -> OpsGPT.Senior -> senior_engineer
+OpsGPT_Juniors -> OpsGPT.Junior -> junior_engineer
+```
+
+Entra Groups are assigned to app roles in the Enterprise Application. Raw group object IDs are not used as the primary authorization mechanism. Alert Ingestion and AI Analysis keep using `X-Internal-API-Key` for internal Core API routes and are not redirected through Entra authentication.
+
 ## Next Phase Exclusions
 
-Azure deployment, AKS, Azure Service Bus, Terraform, Helm, Kubernetes manifests, App Service, Container Apps, Entra ID, private endpoints, and production networking are intentionally excluded from Phase 1.
+Azure deployment, AKS, Azure Service Bus, Terraform, Helm, Kubernetes manifests, App Service, Container Apps, private endpoints, and production networking are intentionally excluded from Phase 1.

@@ -10,7 +10,7 @@ OpsGPT is an internal AI first responder for production incidents. It receives P
 
 Phase 1 is local application development only. The application should run locally or on a VM through Docker Compose and an Nginx reverse proxy.
 
-Do not add Azure deployment infrastructure, AKS deployment, Azure Service Bus, Terraform, Helm, Kubernetes manifests, Azure App Service deployment, Azure Container Apps deployment, Microsoft Entra ID integration, production networking, private endpoints, or cloud infrastructure files unless explicitly requested in a later phase.
+Do not add Azure deployment infrastructure, AKS deployment, Azure Service Bus, Terraform, Helm, Kubernetes manifests, Azure App Service deployment, Azure Container Apps deployment, production networking, private endpoints, or cloud infrastructure files unless explicitly requested in a later phase.
 
 ## Locked Architecture
 
@@ -56,6 +56,7 @@ Backend:
 - JWT authentication for local development
 - `passlib[bcrypt]` for password hashing
 - `python-jose` for JWT
+- Microsoft Entra ID for user authentication and app-role-based authorization
 
 Frontend:
 
@@ -129,15 +130,25 @@ Admins can manage projects, create/update/deactivate Prometheus Alertmanager mon
 
 ## Authentication
 
-Use local JWT authentication for Phase 1.
+OpsGPT IAM uses Microsoft Entra ID with App Roles assigned to Entra Groups. The backend authorizes users from the validated token `roles` claim. Raw Entra group claims are not the primary IAM design.
 
-Seed users:
+Entra app role mapping, in priority order:
+
+- `OpsGPT.Admin` -> `admin`
+- `OpsGPT.Senior` -> `senior_engineer`
+- `OpsGPT.Junior` -> `junior_engineer`
+
+The frontend uses MSAL to obtain a Core API access token. The Core API validates the token signature, issuer, audience, expiry, and tenant before mapping the app role to the existing RBAC role. Internal backend APIs continue to authenticate with `X-Internal-API-Key`.
+
+Local JWT authentication remains an explicit development fallback only. When `AUTH_PROVIDER=entra` and `ALLOW_LOCAL_AUTH=false`, local password login is disabled.
+
+Local fallback seed users:
 
 - `junior.engineer@company.com` / `password123` / `junior_engineer`
 - `senior.engineer@company.com` / `password123` / `senior_engineer`
 - `admin@company.com` / `password123` / `admin`
 
-JWT settings:
+Local fallback JWT settings:
 
 - `JWT_SECRET_KEY`
 - `JWT_ALGORITHM=HS256`
@@ -195,7 +206,6 @@ Notification Service must not crash if Slack URL is missing while console mode i
 - Terraform
 - Helm
 - Azure Service Bus
-- Microsoft Entra ID
 - Additional alert vendors
 - Extra microservices
 - Redux or complex frontend state management
@@ -206,3 +216,4 @@ Notification Service must not crash if Slack URL is missing while console mode i
 - 2026-06-18: Initial Phase 1 context created from the pasted requirements, including the shared PostgreSQL database override.
 - 2026-06-19: Confirmed Docker remains the target runtime; added Core API container database bootstrap requirement for table creation and default user seeding.
 - 2026-06-20: Confirmed Azure AI Foundry as the first cloud integration for AI Analysis, with a failure-tolerant, environment-configured model call.
+- 2026-06-21: Confirmed Microsoft Entra ID IAM using app roles assigned to Entra groups; Core API authorizes the validated token `roles` claim and preserves existing OpsGPT RBAC.

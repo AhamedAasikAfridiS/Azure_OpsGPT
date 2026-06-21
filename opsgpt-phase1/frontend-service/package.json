@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@azure/msal-browser": "latest",
     "@vitejs/plugin-react": "latest",
     "axios": "latest",
     "clsx": "latest",

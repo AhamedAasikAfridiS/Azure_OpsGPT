@@ -10,13 +10,17 @@ VITE_CORE_API_URL=/api/core
 
 The UI includes login, project selection, project dashboard, incidents, incident detail, admin project setup, Prometheus Alertmanager source setup, member assignment, profile, and knowledge base views.
 
+Microsoft Entra ID sign-in uses MSAL redirect flow. The frontend requests the configured Core API scope, attaches the access token to Core API calls, and uses the role returned by `GET /auth/me` for display only.
+
 ## core-api-service
 
 FastAPI service on port `8001`.
 
 Responsibilities:
 
-- JWT authentication
+- Microsoft Entra ID access-token validation with cached JWKS
+- App-role mapping from token `roles` to existing OpsGPT RBAC roles
+- Optional local JWT fallback when explicitly enabled
 - User profile
 - RBAC
 - Project management
@@ -33,6 +37,8 @@ Responsibilities:
 - Optional notification trigger
 
 Core API does not parse Alertmanager raw payloads, generate AI analysis, send Slack directly, or receive monitoring webhooks directly.
+
+Core API never trusts a role supplied by the frontend. It accepts `OpsGPT.Admin`, `OpsGPT.Senior`, and `OpsGPT.Junior` from a validated Entra token's `roles` claim, with Admin/Senior/Junior priority, then upserts the Entra user locally. Internal routes remain protected by `X-Internal-API-Key` rather than Entra user tokens.
 
 ## alert-ingestion-service
 

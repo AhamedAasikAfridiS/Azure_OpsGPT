@@ -39,13 +39,30 @@ Useful direct service URLs:
 - AI Analysis docs: `http://localhost:8003/docs`
 - Notification docs: `http://localhost:8004/docs`
 
-## Login
+## Microsoft Entra ID Login
 
-Default users:
+OpsGPT uses Microsoft Entra ID by default. Before building the frontend, provide these values in the environment used by Docker Compose:
 
-- `admin@company.com` / `password123`
-- `senior.engineer@company.com` / `password123`
-- `junior.engineer@company.com` / `password123`
+```text
+VITE_AUTH_PROVIDER=entra
+VITE_AZURE_TENANT_ID=<tenant-id>
+VITE_AZURE_CLIENT_ID=<frontend-app-client-id>
+VITE_AZURE_REDIRECT_URI=http://localhost:8080
+VITE_AZURE_POST_LOGOUT_REDIRECT_URI=http://localhost:8080
+VITE_AZURE_API_SCOPE=api://<core-api-client-id>/access_as_user
+
+AUTH_PROVIDER=entra
+ALLOW_LOCAL_AUTH=false
+AZURE_TENANT_ID=<tenant-id>
+AZURE_CLIENT_ID=<core-api-client-id>
+AZURE_API_AUDIENCE=<expected-access-token-audience>
+```
+
+`VITE_*` values are embedded when Vite builds the frontend image, so rebuild the frontend after changing them. `AZURE_ISSUER` and `AZURE_JWKS_URL` can be omitted to use tenant-based Microsoft defaults.
+
+In Entra, create `OpsGPT_Admins`, `OpsGPT_Seniors`, and `OpsGPT_Juniors`; create `OpsGPT.Admin`, `OpsGPT.Senior`, and `OpsGPT.Junior` app roles; then assign each group to its matching role in the Enterprise Application. Core API maps the access token `roles` claim to `admin`, `senior_engineer`, or `junior_engineer`; it does not use raw group IDs.
+
+For a local password-only fallback, set `AUTH_PROVIDER=local`, `ALLOW_LOCAL_AUTH=true`, and `VITE_AUTH_PROVIDER=local` before rebuilding. The seeded fallback accounts are `admin@company.com`, `senior.engineer@company.com`, and `junior.engineer@company.com`, each with password `password123`.
 
 ## Admin Setup Flow
 
