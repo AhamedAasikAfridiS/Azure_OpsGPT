@@ -1,4 +1,4 @@
-import { LogOut, Menu, User } from "lucide-react";
+import { LogOut, Menu, ShieldCheck, User } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import ProjectSelector from "../navigation/ProjectSelector.jsx";
@@ -17,6 +17,10 @@ export default function Header({ onLogout, onMenuClick, pageTitle, selectedProje
       </div>
 
       <div className="topbar-actions">
+        <span className="system-status-pill">
+          <ShieldCheck size={15} aria-hidden="true" />
+          Authenticated
+        </span>
         <ProjectSelector selectedProjectId={selectedProjectId} setSelectedProjectId={setSelectedProjectId} />
         <Link className="profile-chip" to="/profile">
           <User size={18} aria-hidden="true" />
