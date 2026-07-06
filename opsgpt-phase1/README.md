@@ -369,6 +369,13 @@ http://<VM_IP>:8080/alerts/webhook/project/{project_id}/{webhook_token}
 
 CORS is open for Phase 1 development only. Production deployment should restrict allowed origins.
 
+Operational probe paths:
+
+- Liveness: `GET /health`
+- Readiness: `GET /ready`
+
+Backend `/ready` checks the shared PostgreSQL database and returns `503` when the service is not ready. AI Analysis readiness does not call Azure AI Foundry. Frontend Nginx and the root Nginx reverse proxy expose static `/health` and `/ready` responses for container probes.
+
 ## 11. Prometheus Alertmanager Integration
 
 Prometheus Alertmanager is the only supported alert source in Phase 1.

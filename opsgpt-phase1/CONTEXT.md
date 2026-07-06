@@ -187,7 +187,9 @@ Use a professional teal / teal-blue / white / dark slate theme.
 
 ## Stability Rules
 
-All backend services must expose `GET /health`, use CORS with `allow_origins=["*"]` and `allow_credentials=False`, handle database sessions safely, log controlled errors, and avoid exposing secrets in logs.
+All backend services must expose `GET /health` for liveness and `GET /ready` for readiness. `/health` must stay lightweight and dependency-free. `/ready` should verify the service database connection and return `503` when the service is not ready. Readiness must not call Azure AI Foundry or other external cloud services. Frontend and root Nginx containers expose static `GET /health` and `GET /ready` probe paths.
+
+All backend services must use CORS with `allow_origins=["*"]` and `allow_credentials=False`, handle database sessions safely, log controlled errors, and avoid exposing secrets in logs.
 
 Core API must bootstrap the database inside the Docker container before Uvicorn starts. The bootstrap creates Core API tables and enforces the three default local users so existing Phase 1 Docker volumes with stale credentials are repaired on rebuild.
 
@@ -217,3 +219,4 @@ Notification Service must not crash if Slack URL is missing while console mode i
 - 2026-06-19: Confirmed Docker remains the target runtime; added Core API container database bootstrap requirement for table creation and default user seeding.
 - 2026-06-20: Confirmed Azure AI Foundry as the first cloud integration for AI Analysis, with a failure-tolerant, environment-configured model call.
 - 2026-06-21: Confirmed Microsoft Entra ID IAM using app roles assigned to Entra groups; Core API authorizes the validated token `roles` claim and preserves existing OpsGPT RBAC.
+- 2026-07-06: Added liveness and readiness probe contract: `/health` for dependency-free liveness and `/ready` for database-backed readiness.

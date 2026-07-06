@@ -1,11 +1,11 @@
 import logging
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes import audit_logs, auth, incidents, internal, knowledge_base, projects, users
 from app.core.config import settings
-from app.db.database import init_db
+from app.db.database import init_db, is_database_ready
 from app.db.seed import seed_default_users
 
 logging.basicConfig(level=logging.INFO)
@@ -42,3 +42,13 @@ def startup() -> None:
 @app.get("/health")
 def health() -> dict:
     return {"status": "ok", "service": "core-api-service"}
+
+
+@app.get("/ready")
+def ready() -> dict:
+    if not is_database_ready():
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Database is not ready",
+        )
+    return {"status": "ready", "service": "core-api-service", "checks": {"database": "ok"}}

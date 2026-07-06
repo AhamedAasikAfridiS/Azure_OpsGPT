@@ -27,6 +27,16 @@ def get_db() -> Generator[Session, None, None]:
         db.close()
 
 
+def is_database_ready() -> bool:
+    try:
+        with engine.connect() as connection:
+            connection.execute(text("SELECT 1"))
+        return True
+    except SQLAlchemyError as exc:
+        logger.warning("Core API database readiness check failed: %s", exc.__class__.__name__)
+        return False
+
+
 def init_db() -> bool:
     from app.models import models  # noqa: F401
 

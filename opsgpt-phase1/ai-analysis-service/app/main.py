@@ -1,11 +1,11 @@
 import logging
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes import analysis
 from app.core.config import settings
-from app.db.database import init_db
+from app.db.database import init_db, is_database_ready
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -35,3 +35,13 @@ def health() -> dict:
         "status": "ok",
         "service": "ai-analysis-service",
     }
+
+
+@app.get("/ready")
+def ready() -> dict:
+    if not is_database_ready():
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Database is not ready",
+        )
+    return {"status": "ready", "service": "ai-analysis-service", "checks": {"database": "ok"}}

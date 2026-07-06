@@ -10,6 +10,11 @@ Base path:
 /api/core
 ```
 
+Operational probes:
+
+- `GET /health`
+- `GET /ready`
+
 Auth:
 
 - `POST /auth/login` is available only for the explicit local-development fallback.
@@ -100,6 +105,7 @@ Base paths:
 Endpoints:
 
 - `GET /health`
+- `GET /ready`
 - `POST /alerts/webhook/project/{project_id}/{webhook_token}`
 - `POST /alerts/webhook/prometheus-alertmanager`
 - `POST /alerts/manual`
@@ -132,11 +138,12 @@ Base path:
 Endpoints:
 
 - `GET /health`
+- `GET /ready`
 - `POST /analysis/alerts`
 - `POST /analysis/correlate`
 - `GET /analysis/incidents/{incident_id}`
 
-Only `ai-analysis-service` calls Azure AI Foundry. It supports the Responses API by default and a Chat Completions compatibility mode. `GET /health` does not test Foundry connectivity. AI Analysis stores failure details when configuration is missing, AI calls fail, invalid JSON is returned, or Core API cannot be updated; correlation can still create the incident.
+Only `ai-analysis-service` calls Azure AI Foundry. It supports the Responses API by default and a Chat Completions compatibility mode. `GET /health` does not test Foundry connectivity. `GET /ready` checks database readiness only and does not call Foundry. AI Analysis stores failure details when configuration is missing, AI calls fail, invalid JSON is returned, or Core API cannot be updated; correlation can still create the incident.
 
 ## Notification API
 
@@ -149,6 +156,7 @@ Base path:
 Endpoints:
 
 - `GET /health`
+- `GET /ready`
 - `POST /notifications/events`
 - `POST /notifications/slack/test`
 - `GET /notifications`
@@ -166,3 +174,17 @@ Notification event types:
 ## Alert Source
 
 Phase 1 supports Prometheus Alertmanager webhooks only. OpsGPT does not scrape dashboards or query the Prometheus metrics API in Phase 1.
+
+## Frontend and Reverse Proxy Probes
+
+The frontend Nginx container exposes:
+
+- `GET /health`
+- `GET /ready`
+
+The root Nginx reverse proxy also exposes:
+
+- `GET /health`
+- `GET /ready`
+
+For Kubernetes or cloud health probes, use `/health` as the liveness path and `/ready` as the readiness path. Backend readiness returns `503` when the shared PostgreSQL database is unavailable.

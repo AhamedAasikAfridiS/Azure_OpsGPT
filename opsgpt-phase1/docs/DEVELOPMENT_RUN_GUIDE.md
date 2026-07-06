@@ -39,6 +39,13 @@ Useful direct service URLs:
 - AI Analysis docs: `http://localhost:8003/docs`
 - Notification docs: `http://localhost:8004/docs`
 
+Probe paths for Kubernetes or cloud health settings:
+
+- Liveness: `/health`
+- Readiness: `/ready`
+
+Backend readiness checks the shared PostgreSQL connection and returns `503` until the service is ready. Frontend Nginx and root Nginx expose static `/health` and `/ready` endpoints.
+
 ## Microsoft Entra ID Login
 
 OpsGPT uses Microsoft Entra ID by default. Before building the frontend, provide these values in the environment used by Docker Compose:
