@@ -8,7 +8,12 @@ from app.models.models import User
 
 def upsert_entra_user(db: Session, claims: dict[str, Any], role: str) -> User:
     entra_oid = claims["oid"]
-    email = claims.get("preferred_username") or claims.get("email")
+    email = (
+        claims.get("preferred_username")
+        or claims.get("email")
+        or claims.get("upn")
+        or claims.get("unique_name")
+    )
     if not isinstance(email, str) or not email.strip():
         raise ValueError("Microsoft Entra access token has no preferred username or email")
 
